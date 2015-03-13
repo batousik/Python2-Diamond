@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 from codecs import open  # To use a consistent encoding
 from os import path
 from setuptools.command.test import test as test_command
@@ -34,13 +34,10 @@ setup(
     keywords='boardgame diamond python',
     long_description=long_description,
     version='0.1',
-    packages=['diamond_game', ],
+    packages=find_packages(),
     install_requires=['tox', 'sphinx', ],
     # tests_require=['tox', ],
     author='130017964, Cheryl, Emil',
     license='MIT',
     cmdclass={'test': Tox},
 )
-
-if __name__ == '__main__':
-    setup()

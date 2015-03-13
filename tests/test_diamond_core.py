@@ -14,4 +14,6 @@ from diamond_game import MainClass1
 
 # first ever test
 def test_setup():
+    a = MainClass1()
+    a.function1(1, 1, 1)
     assert 1 == 1
