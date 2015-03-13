@@ -11,7 +11,8 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-
+   cheat_sheet
+   modules
 
 Indices and tables
 ==================

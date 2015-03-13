@@ -1,3 +1,5 @@
+from diamond_game import MainClass1
+
 # When implementing a new feature, please add at least one test case for it to this file.
 # Your function name MUST begin with "test_", and SHOULD have a somewhat descriptive name.
 # You can either have separate functions to test XML -> Object and Object -> XML,

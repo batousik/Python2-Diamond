@@ -33,11 +33,14 @@ setup(
     url='https://github.com/batousik/Python2-Diamond',
     keywords='boardgame diamond python',
     long_description=long_description,
-    version='0.1dev',
-    packages=['src', ],
+    version='0.1',
+    packages=['diamond_game', ],
     install_requires=['tox', 'sphinx', ],
     # tests_require=['tox', ],
     author='130017964, Cheryl, Emil',
     license='MIT',
     cmdclass={'test': Tox},
 )
+
+if __name__ == '__main__':
+    setup()

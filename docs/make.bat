@@ -5,6 +5,7 @@ REM Command file for Sphinx documentation
 if "%SPHINXBUILD%" == "" (
 	set SPHINXBUILD=sphinx-build
 )
+set APPDIR=../
 set BUILDDIR=_build
 set ALLSPHINXOPTS=-d %BUILDDIR%/doctrees %SPHINXOPTS% .
 set I18NSPHINXOPTS=%SPHINXOPTS% .
@@ -258,6 +259,10 @@ if "%1" == "pseudoxml" (
 	echo.
 	echo.Build finished. The pseudo-XML files are in %BUILDDIR%/pseudoxml.
 	goto end
+)
+
+if "%1" == "rst" (
+  sphinx-apidoc -o %APPDIR%/docs %APPDIR%
 )
 
 :end
