@@ -1,11 +1,27 @@
 language: python
+
 python:
-    - 2.7
-before-script:
-    - chmod 777 .travis_pygame
-    - ./.travis_pygame
+    - "2.7"
+
+virtualenv:
+  system_site_packages: true
+
+branches:
+  only:
+    - master
+
+install:
+  - echo "Entered install..."
+  - sudo apt-get update -qq
+  - sudo apt-get build-dep -qq python-pygame
+  - sudo apt-get install -qq python-pygame
+
 script:
+    - echo "Entered script..."
     - python setup.py test
+
 notifications:
     email:
         on_failure: change
+
+
