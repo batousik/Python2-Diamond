@@ -1,11 +1,11 @@
 language: python
 python:
-    - "2.7"
-before-install:
+    - 2.7
+before-script:
     - chmod 777 .travis_pygame
     - ./.travis_pygame
 script:
-    - "python setup.py test"
+    - python setup.py test
 notifications:
     email:
         on_failure: change
