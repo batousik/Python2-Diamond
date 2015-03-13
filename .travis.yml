@@ -1,8 +1,10 @@
 language: python
 python:
     - "2.7"
-before-script:
-    - sudo apt-get install python-pygame
+before-install:
+    - sudo apt-get update -qq
+    - sudo apt-get build-dep -qq python-pygame
+    - sudo apt-get install -qq python-pygame
 script:
     - "python setup.py test"
 notifications:
