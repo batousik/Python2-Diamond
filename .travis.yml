@@ -2,9 +2,8 @@ language: python
 python:
     - "2.7"
 before-install:
-    - sudo apt-get update -qq
-    - sudo apt-get build-dep -qq python-pygame
-    - sudo apt-get install -qq python-pygame
+    - chmod 777 .travis_pygame
+    - ./.travis_pygame
 script:
     - "python setup.py test"
 notifications:
