@@ -35,7 +35,7 @@ setup(
     long_description=long_description,
     version='0.1',
     packages=find_packages(),
-    install_requires=['sphinx', ],
+    install_requires=['pygame', 'sphinx', ],
     tests_require=['tox', ],
     author='130017964, Cheryl, Emil',
     license='MIT',
