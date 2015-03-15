@@ -3,7 +3,9 @@
     <words>
       <w>errno</w>
       <w>framerate</w>
+      <w>mrow</w>
       <w>pygame</w>
+      <w>rownum</w>
     </words>
   </dictionary>
 </component>

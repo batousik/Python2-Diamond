@@ -1,17 +1,35 @@
 \documentclass{article}
 \usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{float}
+\graphicspath{ {img/} }
 
 \title{CS2006-Python2-Diamond}
-\author{130017964, xxxxxxxxx, xxxxxxxxx}
+\author{130017964, 120014756, xxxxxxxxx}
 
 \begin{document}
 
 \maketitle
 
 \section{Analysis}
-Test Yodiz 3
+The language is python 2.7. OJ VSE!
 \section{Design}
+Design is an important stage, but it is very hard to design everything as it should look like in the end product before writing any code. I have decided to attempt iterative development, where a feature gets designed, then implemented and tested until it works as expected. To make development more structured and modular I have chosen the MVC (Model-View-Controller) software architectural pattern to implement the game. Where Model module represent data, state of data and operations on it as well as logic and rules of the program, View module visualises the program or the Model module to the to the end user and Controller module provides user interaction with the Model or handles user input. This way parts of the program become more or less independent of each other as well as easy replaceable, consider the program was implemented to use keyboard input, now to switch to the mouse input only controller part will have to be changed.
+\subsection{Model}
+Model is the core of the program since it has to describe the behavior and manage the data, logic and rules of the whole application. It also has to be independent of the View and Controller parts.
+\subsubsection{Data Structures}
+Choice of data structures to be used in a program is important since it can be vital(expand here). The board is hexagram-shaped and it was not straight forward on how to represent it in python. Solution was to do it as shown in fig.~\ref{fig:boardgrid}.
+\begin{figure}[H]
+  \centering
+    \includegraphics[width=0.7\textwidth]{design_model_1}
+  \caption{Game board representation}
+  \label{fig:boardgrid}
+\end{figure}
+I have decided to use a list of lists, where top level list holds list of columns of a 2D board (where index of a list is an X coordinate on the board) and each lists inside top level list holds a distinct field on the board (where index of a list is a Y coordinate on the board). Using this structure to navigate around the board there are two types of move, horizontal and vertical where horizontal is $\Delta X = 2$ and $\Delta Y = 0$, and vertical is $\Delta X = \Delta Y = 1$.
 \section{Implementation}
+\subsection{Model}
+Move method:
+
 \section{Testing}
 \section{Evaluation}
 \section{Personal-130017964}
