@@ -23,5 +23,3 @@ script:
 notifications:
     email:
         on_failure: change
-
-
