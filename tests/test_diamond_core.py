@@ -15,15 +15,10 @@ def test_setup():
     a.function1(1, 1, 1)
     assert 1 == 1
 
-
-# testing Model
-
-# testing board
-
-# test number of each color
-# test number of empty
-# test number of non playable
-# go diagonal test all playable
-# test boundaries of DS
-
-
+# testing Mo
+# testing bo
+# test number of eolor
+# test number of e
+# test number of noayable
+# go diagonal test playable
+# test boundaries o
