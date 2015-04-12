@@ -3,6 +3,7 @@ from diamond_game.config import Conf
 
 
 class Model(object):
+    # initialise game model
     def __init__(self):
         self.current_player = Conf.empty
         self.number_of_players = 0
@@ -10,6 +11,7 @@ class Model(object):
         self.board = Board(size_player_triangle_base)
         self.ai_players = []
 
+    # initialise game for players set with the board
     def init_game(self, ai_players, players):
         self.number_of_players = len(ai_players) + len(players)
         self.ai_players = ai_players
