@@ -41,6 +41,18 @@ class MenuMouseMotionEvent(Event):
         self.position = pos
 
 
+class MenuSelectEvent:
+    def __init__(self, val):
+        self.name = "Menu select event: " + str(val)
+        self.value = val
+
+
+class MenuUnSelectEvent:
+    def __init__(self, val):
+        self.name = "Menu un select event: " + str(val)
+        self.value = val
+
+
 class EventManager:
     """Class to manage all of the events generated in the Game"""
     def __init__(self):
@@ -65,3 +77,24 @@ class EventManager:
         """Post a new event.  It will be broadcast to all listeners"""
         for listener in self.listeners.keys():
             listener.notify(event)
+
+
+class MVCObject(object):
+    def __init__(self, ev_manager):
+        self.event_manager = ev_manager
+        self.event_manager.register_listener(self)
+
+    def notify(self, event):
+        pass
+
+    def does_handle_event(self, event):
+        pass
+
+    def handle_event(self, event):
+        pass
+
+    def handle_py_game_event(self, event):
+        pass
+
+    def post(self, event):
+        self.event_manager.post(event)

@@ -22,7 +22,7 @@ from diamond_game.controller.controllers import SpinnerController, MasterControl
 #         pygame.sprite.Sprite.__init__(self)
 #         self.image = pygame.Surface([Conf.piece_size, Conf.piece_size])
 #         self.image.fill(colour)
-#         self.rect = self.image.get_rect()
+#         self.rect = self.image.get_rect() lj b
 #         self.rect.center = loc
 #         self.dragged = False
 #
@@ -130,83 +130,21 @@ from diamond_game.controller.controllers import SpinnerController, MasterControl
 # if __name__ == "__main__":
 #     print("Hello Diamond")
 #     main()
-from weakref import WeakKeyDictionary
-import pygame
-from pygame.constants import DOUBLEBUF
-
-from game_manager import *
+from diamond_game.model.models import MasterModel
+from diamond_game.view.views import MasterView
+from diamond_game import *
 
 
-class PygameView(EventManager):
-    def __init__(self, ev_manager):
-        EventManager.__init__(self)
 
-        self.listeners = self.listeners
-        self.dialog_listeners = WeakKeyDictionary()
-
-        self.event_manager = ev_manager
-        self.event_manager.register_listener(self)
-
-        # load pygame modules
-        pygame.init()
-        # perform some set up
-        # window caption
-        pygame.display.set_caption("Chinese Checkers v 0.1")
-        # size of window
-        size = 400, 400  # size_x*Conf.piece_size, size_y*(Conf.piece_size+Conf.y_separation)
-        # screen = pygame.display.set_mode(size, FULLSCREEN)  # make window
-        self.screen = pygame.display.set_mode(size, DOUBLEBUF)  # make window and DOUBLEBUF for smooth animation
-        self.background = pygame.Surface(self.screen.get_size())
-        self.background.fill((0, 0, 0))
-        self.screen.blit(self.background, (0, 0))
-        pygame.display.flip()
-
-        self.dialog = None
-        self.sub_views = []
-        self.sprite_group = Group()
-
-        self.view_classes = {'menu': [1], 'options': [1], 'main': [1]}
-        # self.dialogClasses = {'msgDialog': BlockingDialogView}
-
-        # the subviews that make up the current screen.  In order from
-        # bottom to top
-        # self.subviews = []
-        self.switch_view('menu')
-
-    def notify(self, event):
-        if isinstance(event, TickEvent):
-            # Draw Everything
-            pass
-
-    def switch_view(self, key):
-        # if self.dialog:
-        #     raise Exception('cannot switch view while dialog up')
-        if not self.view_classes.has_key(key):
-            raise NotImplementedError('master view doesnt have key')
-        for view in self.sub_views:
-            view.kill()
-        self.sub_views = []
-        self.sprite_group.empty()
-        rect = pygame.Rect((0, 0), self.screen.get_size())
-        # construct the new master View
-        for view_class in self.view_classes[key]:
-            if hasattr(view_class, 'clip_rect'):
-                rect = view_class.clip_rect
-            # view = view_class(self, self.sprite_group, rect)
-            # bg_blit = view.GetBackgroundBlit()
-            # self.background.blit(bg_blit[0], bg_blit[1])
-            # self.sub_views.append(view)
-        # initial blit & flip of the newly constructed background
-        self.screen.blit(self.background, (0, 0))
-        pygame.display.flip()
 
 
 def main():
     event_manager = EventManager()
+    model = MasterModel(event_manager)
     controller = MasterController(event_manager)
     # keyboard = KeyboardController(event_manager)
     spinner = SpinnerController(event_manager)
-    pygame_view = PygameView(event_manager)
+    pygame_view = MasterView(event_manager)
 
     spinner.run()
 

@@ -1,19 +1,18 @@
 import pygame
 from pygame.constants import *
-from game_manager import TickEvent, QuitEvent, MenuPrevEvent, MenuNextEvent, MenuPressEvent, MenuClickEvent, \
-    MenuMouseMotionEvent
+from diamond_game import TickEvent, QuitEvent, MenuPrevEvent, MenuNextEvent, MenuPressEvent, MenuClickEvent, \
+    MenuMouseMotionEvent, MVCObject
 
 
-class MasterController(object):
+class MasterController(MVCObject):
     def __init__(self, ev_manager):
-        self.event_manager = ev_manager
-        self.event_manager.register_listener(self)
+        MVCObject.__init__(self, ev_manager)
         # sub controllers is an ordered list,
         # the first controller in the
         # list is the first to be offered an event
         self.sub_controllers = []
-        self.gui_classes = {'menu': [MenuController]}
-        self.dialogClasses = {'msgDialog': 1}
+        self.controller_classes = {'menu': [MenuController]}
+        self.sub_controllers = {'msgDialog': 1}
         self.switch_controller('menu')
 
     def notify(self, event):
@@ -47,32 +46,18 @@ class MasterController(object):
         # self.DialogRemove( incomingEvent.key )
 
     def switch_controller(self, key):
-        if not self.gui_classes.has_key(key):
+        if not self.controller_classes.has_key(key):
             raise NotImplementedError
         self.sub_controllers = []
-        for controller_class in self.gui_classes[key]:
+        for controller_class in self.controller_classes[key]:
             new_controller = controller_class(self.event_manager)
             self.sub_controllers.append(new_controller)
 
 
-class GUIController:
+class MenuController(MVCObject):
     def __init__(self, ev_manager):
-        self.event_manager = ev_manager
-        self.event_manager.register_listener(self)
+        MVCObject.__init__(self, ev_manager)
 
-    def does_handle_event(self, event):
-        return 0
-
-    def handle_py_game_event(self, event):
-        """is given a pygame.event and is responsible for generating
-        an event defined in the local events module, or doing nothing"""
-        pass
-
-    def notify(self, event):
-        pass
-
-
-class MenuController(GUIController):
     def does_handle_event(self, event):
         if event.type == KEYDOWN or event.type == MOUSEBUTTONDOWN or event.type == MOUSEMOTION:
             return 1
@@ -96,6 +81,23 @@ class MenuController(GUIController):
             cur_event = MenuMouseMotionEvent(event.pos)
         if cur_event:
             self.event_manager.post(cur_event)
+
+
+class GUIController:
+    def __init__(self, ev_manager):
+        self.event_manager = ev_manager
+        self.event_manager.register_listener(self)
+
+    def does_handle_event(self, event):
+        return 0
+
+    def handle_py_game_event(self, event):
+        """is given a pygame.event and is responsible for generating
+        an event defined in the local events module, or doing nothing"""
+        pass
+
+    def notify(self, event):
+        pass
 
 
 class KeyboardController:
@@ -157,9 +159,10 @@ class MouseController:
                     self.event_manager.post(cur_event)
 
 
-class SpinnerController:
+class SpinnerController(MVCObject):
     """Class that has while loop to issue game tick events"""
     def __init__(self, ev_manager):
+        super(SpinnerController, self).__init__(ev_manager)
         self.running = True
         self.event_manager = ev_manager
         self.event_manager.register_listener(self)

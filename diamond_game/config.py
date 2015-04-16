@@ -11,6 +11,7 @@ class Conf(object):
     p5 = 5
     p6 = 6
 
+    # Colours
     red = (255, 0, 0)
     green = (0, 255, 0)
     blue = (0, 0, 255)
@@ -21,11 +22,22 @@ class Conf(object):
     black = (0, 0, 0)
 
     colours = [white, red, green, blue, dark_red, dark_blue, dark_green, black]
+
+    # Game settings
     default_size_player_base = 4
 
+    # Views
+    screen_size = 400, 400
+
+    # Game View
     piece_rad = 10
     piece_size = piece_rad * 2
     y_separation = int(math.sin(math.pi/3) * piece_rad)
+
+    # Menu View
+    b1_loc = screen_size[0]/2, screen_size[0]/2 - 30
+    b2_loc = screen_size[0]/2, screen_size[0]/2
+    b3_loc = screen_size[0]/2, screen_size[0]/2 + 30
 
     @staticmethod
     def loc_to_view(x, y):
