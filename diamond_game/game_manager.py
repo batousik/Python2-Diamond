@@ -1,59 +1,83 @@
 class Event(object):
     """Generic event class, all Events should extend this class"""
-    def __init__(self):
-        self.name = "Generic Event"
+    def __init__(self, name):
+        self.name = name
 
 
 class TickEvent(Event):
     def __init__(self):
-        self.name = "Tick Event"
+        Event.__init__(self, "Tick Event")
 
 
 class QuitEvent(Event):
     def __init__(self):
-        self.name = "Quit Event"
+        Event.__init__(self, "Quit Event")
 
 
 class MenuPrevEvent(Event):
     def __init__(self):
-        self.name = "Select Previous Menu Entry Event"
+        Event.__init__(self, "Select Previous Menu Entry Event")
 
 
 class MenuNextEvent(Event):
     def __init__(self):
-        self.name = "Select Next Menu Entry Event"
+        Event.__init__(self, "Select Next Menu Entry Event")
 
 
 class MenuPressEvent(Event):
     def __init__(self):
-        self.name = "Execute menu entry Event"
+        Event.__init__(self, "Menu Press Event")
 
 
-class MenuClickEvent(Event):
+class MouseClickEvent(Event):
     def __init__(self, pos):
-        self.name = "Menu mouse clicked event: " + str(pos)
+        Event.__init__(self, "Mouse Clicked Event: " + str(pos))
         self.position = pos
 
 
-class MenuMouseMotionEvent(Event):
+class MouseMotionEvent(Event):
     def __init__(self, pos):
-        self.name = "Menu mouse moved event: " + str(pos)
+        Event.__init__(self, "Mouse Moved Event: " + str(pos))
         self.position = pos
 
 
-class MenuSelectEvent:
+class MenuSelectEvent(Event):
     def __init__(self, val):
-        self.name = "Menu select event: " + str(val)
+        Event.__init__(self, "Menu Select Event: " + str(val))
         self.value = val
 
 
-class MenuUnSelectEvent:
+class MenuUnSelectEvent(Event):
     def __init__(self, val):
-        self.name = "Menu un select event: " + str(val)
+        Event.__init__(self, "Menu Un Select Event: " + str(val))
         self.value = val
 
 
-class EventManager:
+class ButtonHoverEvent(Event):
+    def __init__(self, val):
+        Event.__init__(self, "Hover Event: " + str(val))
+        self.value = val
+
+
+class SwitchScreenEvent(Event):
+    def __init__(self, val):
+        Event.__init__(self, "Switch Screen Event: " + str(val))
+        self.value = val
+
+
+class BoardCreatedEvent(Event):
+    def __init__(self, val):
+        Event.__init__(self, "Board Create Event: " + str(val))
+        self.value = val
+
+
+class PiecesCreatedEvent(Event):
+    def __init__(self, val):
+        Event.__init__(self, "Pieces Create Event: " + str(val))
+        self.value = val
+
+
+class EventManager(object):
     """Class to manage all of the events generated in the Game"""
     def __init__(self):
         # A dict in which items get deleted if either
@@ -68,7 +92,8 @@ class EventManager:
         if listener in self.listeners.keys():
             del self.listeners[listener]
 
-    def debug(self, event):
+    @staticmethod
+    def debug(event):
         if not isinstance(event, TickEvent):
             print event.name
 
@@ -98,3 +123,7 @@ class MVCObject(object):
 
     def post(self, event):
         self.event_manager.post(event)
+
+
+if __name__ == "__main__":
+    raise Exception("Unexpected")

@@ -2,8 +2,6 @@
 # import sys
 # import os
 # from pygame.constants import RLEACCEL
-from pygame.sprite import Group
-from diamond_game.controller.controllers import SpinnerController, MasterController
 #
 # # check for sound and fonts support
 # if not pygame.font:
@@ -17,57 +15,9 @@ from diamond_game.controller.controllers import SpinnerController, MasterControl
 # """
 #
 #
-# class Piece(pygame.sprite.Sprite):
-#     def __init__(self, colour, loc):
-#         pygame.sprite.Sprite.__init__(self)
-#         self.image = pygame.Surface([Conf.piece_size, Conf.piece_size])
-#         self.image.fill(colour)
-#         self.rect = self.image.get_rect() lj b
-#         self.rect.center = loc
-#         self.dragged = False
+
 #
-#     def is_clicked(self):
-#         return pygame.mouse.get_pressed()[0] and self.rect.collidepoint(pygame.mouse.get_pos())
-#
-#     def update(self):
-#         """
-#         :return:perform sprite update
-#         """
-#
-#         if self.dragged:
-#             pos = pygame.mouse.get_pos()
-#             self.rect.center = pos
-#             self.dragged = pygame.mouse.get_pressed()[0]
-#         else:
-#             self.dragged = self.is_clicked()
-#
-# # def load_image(name, colorkey=None):
-# #     fullname = os.path.join('data', name)
-# #     try:
-# #         image = pygame.image.load(fullname)
-# #     except pygame.error, message:
-# #         print 'Cannot load image:', name
-# #         raise SystemExit, message
-# #     image = image.convert()
-# #     if colorkey is not None:
-# #         if colorkey is -1:
-# #             colorkey = image.get_at((0, 0))
-# #         image.set_colorkey(colorkey, RLEACCEL)
-# #     return image, image.get_rect()
 # #
-# #
-# # def load_sound(name):
-# #     class NoneSound:
-# #         def play(self): pass
-# #     if not pygame.mixer:
-# #         return NoneSound()
-# #     fullname = os.path.join('data', name)
-# #     try:
-# #         sound = pygame.mixer.Sound(fullname)
-# #     except pygame.error, message:
-# #         print 'Cannot load sound:', wav
-# #         raise SystemExit, message
-# #     return sound
 #
 #
 # class View(object):
@@ -130,24 +80,20 @@ from diamond_game.controller.controllers import SpinnerController, MasterControl
 # if __name__ == "__main__":
 #     print("Hello Diamond")
 #     main()
-from diamond_game.model.models import MasterModel
-from diamond_game.view.views import MasterView
+
 from diamond_game import *
-
-
-
 
 
 def main():
     event_manager = EventManager()
     model = MasterModel(event_manager)
+    view = MasterView(event_manager)
     controller = MasterController(event_manager)
-    # keyboard = KeyboardController(event_manager)
     spinner = SpinnerController(event_manager)
-    pygame_view = MasterView(event_manager)
 
     spinner.run()
 
 
 if __name__ == "__main__":
-    main()
+    main(
+)

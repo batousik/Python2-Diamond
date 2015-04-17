@@ -1,1 +1,1 @@
-__author__ = 'Bato'
+from views import MasterView

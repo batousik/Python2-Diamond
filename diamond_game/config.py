@@ -27,7 +27,7 @@ class Conf(object):
     default_size_player_base = 4
 
     # Views
-    screen_size = 400, 400
+    screen_size = 600, 600
 
     # Game View
     piece_rad = 10
@@ -46,3 +46,11 @@ class Conf(object):
     @staticmethod
     def loc_to_model(x, y):
         return x / Conf.piece_size, y / (Conf.piece_size+Conf.y_separation)
+
+    # Game options
+    num_players = 2
+    num_ai_players = 2
+
+
+if __name__ == "__main__":
+    raise Exception("Unexpected")

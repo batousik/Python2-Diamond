@@ -1,1 +1,1 @@
-from diamond_game.model.model import Model
+from models import MasterModel

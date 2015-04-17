@@ -1,7 +1,7 @@
 import pygame
 from pygame.constants import *
-from diamond_game import TickEvent, QuitEvent, MenuPrevEvent, MenuNextEvent, MenuPressEvent, MenuClickEvent, \
-    MenuMouseMotionEvent, MVCObject
+from diamond_game import *
+import random
 
 
 class MasterController(MVCObject):
@@ -11,7 +11,7 @@ class MasterController(MVCObject):
         # the first controller in the
         # list is the first to be offered an event
         self.sub_controllers = []
-        self.controller_classes = {'menu': [MenuController]}
+        self.controller_classes = {'menu': [MenuController], 'game': [GameController], 'options': [OptionsController]}
         self.sub_controllers = {'msgDialog': 1}
         self.switch_controller('menu')
 
@@ -21,7 +21,6 @@ class MasterController(MVCObject):
         if isinstance(event, TickEvent):
             # Handle All PyGame Events
             for py_game_event in pygame.event.get():
-                cur_event = None
                 # Game end event
                 if py_game_event.type == QUIT:
                     cur_event = QuitEvent()
@@ -36,14 +35,8 @@ class MasterController(MVCObject):
                             # Stop other controllers from handling current event
                             break
         # Change screen request
-        # elif isinstance(event, 1):
-        #     self.switch_controller(event.key)
-
-        # elif isinstance( incomingEvent, GUIDialogAddRequest ):
-        # self.DialogAdd( incomingEvent.key )
-        #
-        # elif isinstance( incomingEvent, GUIDialogRemoveRequest ):
-        # self.DialogRemove( incomingEvent.key )
+        elif isinstance(event, SwitchScreenEvent):
+            self.switch_controller(event.value)
 
     def switch_controller(self, key):
         if not self.controller_classes.has_key(key):
@@ -76,28 +69,70 @@ class MenuController(MVCObject):
         elif event.type == MOUSEBUTTONDOWN:
             button = event.button
             if button == 1:
-                cur_event = MenuClickEvent(event.pos)
+                cur_event = MouseClickEvent(event.pos)
         elif event.type == MOUSEMOTION:
-            cur_event = MenuMouseMotionEvent(event.pos)
+            cur_event = MouseMotionEvent(event.pos)
         if cur_event:
             self.event_manager.post(cur_event)
 
 
-class GUIController:
+class GameController(MVCObject):
     def __init__(self, ev_manager):
-        self.event_manager = ev_manager
-        self.event_manager.register_listener(self)
+        MVCObject.__init__(self, ev_manager)
 
     def does_handle_event(self, event):
+        if event.type == KEYDOWN or event.type == MOUSEBUTTONDOWN or event.type == MOUSEMOTION:
+            return 1
         return 0
 
     def handle_py_game_event(self, event):
-        """is given a pygame.event and is responsible for generating
-        an event defined in the local events module, or doing nothing"""
-        pass
+        cur_event = None
+        if event.type == KEYDOWN and event.key == K_ESCAPE:
+            cur_event = QuitEvent()
+        elif event.type == KEYDOWN and event.key == K_UP:
+            cur_event = MenuPrevEvent()
+        elif event.type == KEYDOWN and event.key == K_DOWN:
+            cur_event = MenuNextEvent()
+        elif event.type == KEYDOWN and (event.key == K_RETURN or event.key == K_SPACE):
+            cur_event = MenuPressEvent()
+        elif event.type == MOUSEBUTTONDOWN:
+            button = event.button
+            if button == 1:
+                cur_event = MouseClickEvent(event.pos)
+        elif event.type == MOUSEMOTION:
+            cur_event = MouseMotionEvent(event.pos)
+        if cur_event:
+            self.event_manager.post(cur_event)
 
-    def notify(self, event):
-        pass
+
+class OptionsController(MVCObject):
+    def __init__(self, ev_manager):
+        MVCObject.__init__(self, ev_manager)
+
+    def does_handle_event(self, event):
+        if event.type == KEYDOWN or event.type == MOUSEBUTTONDOWN or event.type == MOUSEMOTION:
+            return 1
+        return 0
+
+    def handle_py_game_event(self, event):
+        cur_event = None
+        if event.type == KEYDOWN and event.key == K_ESCAPE:
+            cur_event = QuitEvent()
+        elif event.type == KEYDOWN and event.key == K_UP:
+            cur_event = MenuPrevEvent()
+        elif event.type == KEYDOWN and event.key == K_DOWN:
+            cur_event = MenuNextEvent()
+        elif event.type == KEYDOWN and (event.key == K_RETURN or event.key == K_SPACE):
+            cur_event = MenuPressEvent()
+        elif event.type == MOUSEBUTTONDOWN:
+            button = event.button
+            if button == 1:
+                cur_event = MouseClickEvent(event.pos)
+        elif event.type == MOUSEMOTION:
+            cur_event = MouseMotionEvent(event.pos)
+        if cur_event:
+            self.event_manager.post(cur_event)
+
 
 
 class KeyboardController:
@@ -176,3 +211,6 @@ class SpinnerController(MVCObject):
         if isinstance(event, QuitEvent):
             # Quits the game
             self.running = False
+
+if __name__ == "__main__":
+    raise Exception("Unexpected")
