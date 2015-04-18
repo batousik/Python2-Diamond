@@ -2,6 +2,15 @@ import math
 
 
 class Conf(object):
+    # Program constants
+    ALL = 1
+    MODEL = 2
+    VIEW = 3
+    CONTROLLER = 4
+
+    debug_dict = {1: 'ALL', 2: 'MODEL', 3: 'VIEW', 4: 'CONTROLLER'}
+
+    # Board constants
     non_playable = -1
     empty = 0
     p1 = 1

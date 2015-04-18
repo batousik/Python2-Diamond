@@ -1,1 +1,1 @@
-from controllers import MasterController, SpinnerController
+from controllers import  MasterControllerThreaded

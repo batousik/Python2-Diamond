@@ -1,3 +1,8 @@
+import Queue
+from threading import Thread
+from diamond_game import Conf
+
+
 class Event(object):
     """Generic event class, all Events should extend this class"""
     def __init__(self, name):
@@ -82,48 +87,85 @@ class EventManager(object):
     def __init__(self):
         # A dict in which items get deleted if either
         # the key or the value of the item is garbage collected.
-        from weakref import WeakKeyDictionary
-        self.listeners = WeakKeyDictionary()
+        self.model_event_queue = Queue.Queue(0)
+        self.view_event_queue = Queue.Queue(0)
+        self.controller_event_queue = Queue.Queue(0)
 
-    def register_listener(self, listener):
-        self.listeners[listener] = 1
+    def post(self, event, destination):
+        """
+        Method that allows to
+        pass events to corresponding parts of the program
+        """
+        if destination == Conf.ALL:
+            self.view_event_queue.put(event)
+            self.model_event_queue.put(event)
+            self.controller_event_queue.put(event)
+        elif destination == Conf.MODEL:
+            self.model_event_queue.put(event)
+        elif destination == Conf.VIEW:
+            self.view_event_queue.put(event)
+        elif destination == Conf.CONTROLLER:
+            self.controller_event_queue.put(event)
+        self.debug(event, destination)
+        """Post a new event.  It will be broadcast to all listeners"""
 
-    def un_register_listener(self, listener):
-        if listener in self.listeners.keys():
-            del self.listeners[listener]
+    def get_next_model_event(self):
+        """
+        :rtype : Event
+        """
+        if not self.model_event_queue.empty():
+            return self.model_event_queue.get()
+
+    def get_next_view_event(self):
+        """
+        :rtype : Event
+        """
+        if not self.view_event_queue.empty():
+            return self.view_event_queue.get()
+
+    def get_next_controller_event(self):
+        """
+        :rtype : Event
+        """
+        if not self.controller_event_queue.empty():
+            return self.controller_event_queue.get()
 
     @staticmethod
-    def debug(event):
+    def debug(event, destination):
         if not isinstance(event, TickEvent):
-            print event.name
-
-    def post(self, event):
-        self.debug(event)
-        """Post a new event.  It will be broadcast to all listeners"""
-        for listener in self.listeners.keys():
-            listener.notify(event)
+            print '[' + event.name + '] send to [' + Conf.debug_dict.get(destination) + ']'
 
 
-class MVCObject(object):
-    def __init__(self, ev_manager):
+class MVCObject(Thread):
+    def __init__(self, ev_manager, name):
+        Thread.__init__(self)
+        self.thread_name = name
         self.event_manager = ev_manager
-        self.event_manager.register_listener(self)
-
-    def notify(self, event):
-        pass
+        self.sub_modules = []
+        self.sub_classes = {}
 
     def does_handle_event(self, event):
-        pass
+        print 'In ' + self.thread_name + ' does_handle_event method is not implemented'
 
     def handle_event(self, event):
-        pass
+        print 'In ' + self.thread_name + ' handle_event method is not implemented'
 
     def handle_py_game_event(self, event):
-        pass
+        print 'In ' + self.thread_name + ' handle_py_game_event method is not implemented'
 
-    def post(self, event):
-        self.event_manager.post(event)
+    def post(self, event, destination):
+        self.event_manager.post(event, destination)
 
+    def run(self):
+        print 'In ' + self.thread_name + ' run method is not implemented'
+
+    def switch_sub_modules(self, key):
+        if not self.sub_classes.has_key(key):
+            raise NotImplementedError
+        self.sub_modules = []
+        for a_class in self.sub_classes[key]:
+            new_module = a_class(self.event_manager)
+            self.sub_modules.append(new_module)
 
 if __name__ == "__main__":
     raise Exception("Unexpected")

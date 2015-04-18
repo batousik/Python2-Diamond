@@ -1,38 +1,42 @@
 from diamond_game import *
 
 
-class MasterModel(MVCObject):
+class MasterModelThreaded(MVCObject):
     def __init__(self, ev_manager):
-        MVCObject.__init__(self, ev_manager)
-        self.model_classes = {'menu': [MenuModel], 'game': [GameModel], 'options': [OptionsModel]}
-        self.sub_models = []
-        self.switch_model('menu')
+        MVCObject.__init__(self, ev_manager, '[model]')
+        self.sub_classes = {'menu': [MenuModel], 'game': [GameModel], 'options': [OptionsModel]}
+        self.switch_sub_modules('menu')
 
-    def notify(self, event):
-        # Handle events
-        if isinstance(event, SwitchScreenEvent):
-            self.switch_model(event.value)
-        else:
-            for model in self.sub_models:
-                # Look for a model that accepts event
-                if model.does_handle_event(event):
-                    # Let model handle event
-                    model.handle_event(event)
-                    # Stop other models from handling current event
-                    break
+    @property
+    def get_next_event(self):
+        return self.event_manager.get_next_model_event()
 
-    def switch_model(self, key):
-        if not self.model_classes.has_key(key):
-            raise NotImplementedError
-        self.sub_models = []
-        for model_class in self.model_classes[key]:
-            new_model = model_class(self.event_manager)
-            self.sub_models.append(new_model)
+    def run(self):
+        running = 1
+        while running:
+            # Check model's event queue
+            event = self.get_next_event
+            # Handle events
+            # If quit event then terminate
+            if isinstance(event, QuitEvent):
+                print self.thread_name + ' is shutting down'
+                running = 0
+            elif isinstance(event, SwitchScreenEvent):
+                # Switch sub_modules on request
+                self.switch_sub_modules(event.value)
+            else:
+                for a_model in self.sub_modules:
+                    # Look for a model that accepts event
+                    if a_model.does_handle_event(event):
+                        # Let model handle event
+                        a_model.handle_event(event)
+                        # Stop other models from handling current event
+                        break
 
 
 class MenuModel(MVCObject):
     def __init__(self, ev_manager):
-        MVCObject.__init__(self, ev_manager)
+        MVCObject.__init__(self, ev_manager, '[MenuModel]')
         self.data = ['game', 'options', 'exit']
         self.chosen = 0
 
@@ -43,28 +47,28 @@ class MenuModel(MVCObject):
 
     def handle_event(self, event):
         if isinstance(event, MenuPrevEvent):
-            self.post(MenuUnSelectEvent(self.chosen))
+            self.post(MenuUnSelectEvent(self.chosen), Conf.VIEW)
             if self.chosen == 0:
                 self.chosen = len(self.data) - 1
             else:
                 self.chosen -= 1
-            self.post(MenuSelectEvent(self.chosen))
+            self.post(MenuSelectEvent(self.chosen), Conf.VIEW)
         elif isinstance(event, MenuNextEvent):
-            self.post(MenuUnSelectEvent(self.chosen))
+            self.post(MenuUnSelectEvent(self.chosen), Conf.VIEW)
             if self.chosen < len(self.data)-1:
                 self.chosen += 1
             else:
                 self.chosen = 0
-            self.post(MenuSelectEvent(self.chosen))
+            self.post(MenuSelectEvent(self.chosen), Conf.VIEW)
         elif isinstance(event, ButtonHoverEvent):
-            self.post(MenuUnSelectEvent(self.chosen))
+            self.post(MenuUnSelectEvent(self.chosen), Conf.VIEW)
             self.chosen = event.value
-            self.post(MenuSelectEvent(self.chosen))
+            self.post(MenuSelectEvent(self.chosen), Conf.VIEW)
         elif isinstance(event, MenuPressEvent):
             if self.data[self.chosen] == 'exit':
-                self.post(QuitEvent())
+                self.post(QuitEvent(), Conf.ALL)
             else:
-                self.post(SwitchScreenEvent(self.data[self.chosen]))
+                self.post(SwitchScreenEvent(self.data[self.chosen]), Conf.ALL)
 
 
 class GameModel(MVCObject):

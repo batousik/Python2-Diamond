@@ -1,1 +1,1 @@
-from models import MasterModel
+from models import MasterModelThreaded

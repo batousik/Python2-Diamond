@@ -80,20 +80,30 @@
 # if __name__ == "__main__":
 #     print("Hello Diamond")
 #     main()
+import pygame
+import sys
+from pygame.constants import DOUBLEBUF
 
 from diamond_game import *
 
 
 def main():
+    # load pygame modules
+    pygame.init()
     event_manager = EventManager()
-    model = MasterModel(event_manager)
-    view = MasterView(event_manager)
-    controller = MasterController(event_manager)
-    spinner = SpinnerController(event_manager)
+    controller_thread = MasterControllerThreaded(event_manager)
+    view_thread = MasterViewThreaded(event_manager)
+    model_thread = MasterModelThreaded(event_manager)
+    view_thread.start()
+    model_thread.start()
+    controller_thread.start()
 
-    spinner.run()
+    while controller_thread.is_alive() or view_thread.is_alive() \
+            or model_thread.is_alive():
+        # event_manager.post(TickEvent(), Conf.VIEW)
+        pygame.event.pump()
 
+    print '_____END_____'
 
 if __name__ == "__main__":
-    main(
-)
+    main()

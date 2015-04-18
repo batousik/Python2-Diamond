@@ -1,55 +1,54 @@
 import pygame
 from pygame.constants import *
 from diamond_game import *
-import random
 
 
-class MasterController(MVCObject):
+class MasterControllerThreaded(MVCObject):
     def __init__(self, ev_manager):
-        MVCObject.__init__(self, ev_manager)
-        # sub controllers is an ordered list,
-        # the first controller in the
-        # list is the first to be offered an event
-        self.sub_controllers = []
-        self.controller_classes = {'menu': [MenuController], 'game': [GameController], 'options': [OptionsController]}
-        self.sub_controllers = {'msgDialog': 1}
-        self.switch_controller('menu')
+        MVCObject.__init__(self, ev_manager, '[controller]')
+        self.name = '[view]'
+        self.sub_classes = {'menu': [MenuController], 'game': [GameController], 'options': [OptionsController]}
+        self.switch_sub_modules('menu')
 
-    def notify(self, event):
-        # If next tick occurred, go through
-        # PyGame events queue and handle them
-        if isinstance(event, TickEvent):
-            # Handle All PyGame Events
+    @property
+    def get_next_event(self):
+        return self.event_manager.get_next_controller_event()
+
+    def run(self):
+        running = 1
+        while running:
+            # Check controller's event queue
+            event = self.get_next_event
+            # Handle events
+            # If quit event then terminate
+            if isinstance(event, QuitEvent):
+                print self.thread_name + ' is shutting down'
+                running = 0
+            elif isinstance(event, SwitchScreenEvent):
+                # Switch sub_modules on request
+                self.switch_sub_modules(event.value)
             for py_game_event in pygame.event.get():
+                # Handle PyGame events
                 # Game end event
                 if py_game_event.type == QUIT:
+                    # Send quit event and Terminate Controller
                     cur_event = QuitEvent()
-                    self.event_manager.post(cur_event)
+                    self.event_manager.post(cur_event, Conf.ALL)
+                    running = 0
                 else:
-                    # Go through all controllers
-                    for controller in self.sub_controllers:
+                    # find if a sub_module can handle the event
+                    for a_controller in self.sub_modules:
                         # Look for a controller that accepts event
-                        if controller.does_handle_event(py_game_event):
+                        if a_controller.does_handle_event(py_game_event):
                             # Let controller handle event
-                            controller.handle_py_game_event(py_game_event)
+                            a_controller.handle_py_game_event(py_game_event)
                             # Stop other controllers from handling current event
                             break
-        # Change screen request
-        elif isinstance(event, SwitchScreenEvent):
-            self.switch_controller(event.value)
-
-    def switch_controller(self, key):
-        if not self.controller_classes.has_key(key):
-            raise NotImplementedError
-        self.sub_controllers = []
-        for controller_class in self.controller_classes[key]:
-            new_controller = controller_class(self.event_manager)
-            self.sub_controllers.append(new_controller)
 
 
 class MenuController(MVCObject):
     def __init__(self, ev_manager):
-        MVCObject.__init__(self, ev_manager)
+        MVCObject.__init__(self, ev_manager, '[MenuController]')
 
     def does_handle_event(self, event):
         if event.type == KEYDOWN or event.type == MOUSEBUTTONDOWN or event.type == MOUSEMOTION:
@@ -73,7 +72,10 @@ class MenuController(MVCObject):
         elif event.type == MOUSEMOTION:
             cur_event = MouseMotionEvent(event.pos)
         if cur_event:
-            self.event_manager.post(cur_event)
+            self.event_manager.post(cur_event, Conf.VIEW)
+            self.event_manager.post(cur_event, Conf.MODEL)
+            if isinstance(event, QuitEvent):
+                self.event_manager.post(cur_event, Conf.CONTROLLER)
 
 
 class GameController(MVCObject):
@@ -193,24 +195,6 @@ class MouseController:
                     print("Keyboard Controller post: " + cur_event.name)
                     self.event_manager.post(cur_event)
 
-
-class SpinnerController(MVCObject):
-    """Class that has while loop to issue game tick events"""
-    def __init__(self, ev_manager):
-        super(SpinnerController, self).__init__(ev_manager)
-        self.running = True
-        self.event_manager = ev_manager
-        self.event_manager.register_listener(self)
-
-    def run(self):
-        while self.running:
-            event = TickEvent()
-            self.event_manager.post(event)
-
-    def notify(self, event):
-        if isinstance(event, QuitEvent):
-            # Quits the game
-            self.running = False
 
 if __name__ == "__main__":
     raise Exception("Unexpected")

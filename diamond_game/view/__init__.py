@@ -1,1 +1,1 @@
-from views import MasterView
+from views import MasterViewThreaded
