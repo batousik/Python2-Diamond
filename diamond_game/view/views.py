@@ -62,6 +62,7 @@ class MasterViewThreaded(MVCObject):
                 print self.thread_name + ' is shutting down'
                 running = 0
             elif isinstance(event, TickEvent):
+                # Update view according to FPS
                 for a_view in self.sub_modules:
                     view_bg = a_view.get_image()
                     self.background.blit(view_bg, (0, 0))

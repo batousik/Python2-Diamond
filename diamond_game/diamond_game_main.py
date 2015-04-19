@@ -81,9 +81,7 @@
 #     print("Hello Diamond")
 #     main()
 import pygame
-import sys
-from pygame.constants import DOUBLEBUF
-
+import time
 from diamond_game import *
 
 
@@ -91,16 +89,19 @@ def main():
     # load pygame modules
     pygame.init()
     event_manager = EventManager()
+
     controller_thread = MasterControllerThreaded(event_manager)
     view_thread = MasterViewThreaded(event_manager)
     model_thread = MasterModelThreaded(event_manager)
+
     view_thread.start()
     model_thread.start()
     controller_thread.start()
 
     while controller_thread.is_alive() or view_thread.is_alive() \
             or model_thread.is_alive():
-        # event_manager.post(TickEvent(), Conf.VIEW)
+        time.sleep(0.01)
+        event_manager.post(TickEvent(), Conf.VIEW)
         pygame.event.pump()
 
     print '_____END_____'
