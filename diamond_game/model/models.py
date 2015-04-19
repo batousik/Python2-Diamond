@@ -1,11 +1,14 @@
 from diamond_game import *
 
 
-class MasterModelThreaded(MVCObject):
+class MasterModel(MVCObject):
     def __init__(self, ev_manager):
         MVCObject.__init__(self, ev_manager, '[model]')
-        self.sub_classes = {'menu': [MenuModel], 'game': [GameModel], 'options': [OptionsModel]}
-        self.switch_sub_modules('menu')
+        self.id = Conf.MODEL
+        self.sub_classes = {Conf.MENU: [MenuModel],
+                            Conf.GAME: [GameModel],
+                            Conf.OPTIONS: [OptionsModel]}
+        self.switch_sub_modules(Conf.MENU)
 
     @property
     def get_next_event(self):
@@ -37,7 +40,7 @@ class MasterModelThreaded(MVCObject):
 class MenuModel(MVCObject):
     def __init__(self, ev_manager):
         MVCObject.__init__(self, ev_manager, '[MenuModel]')
-        self.data = ['game', 'options', 'exit']
+        self.data = [Conf.GAME, Conf.OPTIONS, Conf.EXIT]
         self.chosen = 0
 
     def does_handle_event(self, event):
@@ -65,7 +68,7 @@ class MenuModel(MVCObject):
             self.chosen = event.value
             self.post(MenuSelectEvent(self.chosen), Conf.VIEW)
         elif isinstance(event, MenuPressEvent):
-            if self.data[self.chosen] == 'exit':
+            if self.data[self.chosen] == Conf.EXIT:
                 self.post(QuitEvent(), Conf.ALL)
             else:
                 self.post(SwitchScreenEvent(self.data[self.chosen]), Conf.ALL)
@@ -73,21 +76,89 @@ class MenuModel(MVCObject):
 
 class GameModel(MVCObject):
     def __init__(self, ev_manager):
-        MVCObject.__init__(self, ev_manager)
+        MVCObject.__init__(self, ev_manager, '[GameModel]')
         self.current_player = Conf.empty
         size_player_triangle_base = Conf.default_size_player_base
         self.board = Board(size_player_triangle_base)
+        self.number_of_players = 2
         self.ai_players = []
         self.set_ai_at_random()
         self.board.init_board(Conf.num_players)
         self.current_player = Conf.p1
-        self.post(BoardCreatedEvent(self.get_board_grid()))
-        self.post(PiecesCreatedEvent(self.get_pieces()))
+        self.piece_selected = 0
+        self.piece_selected_loc = (-1, -1)
     # initialise game for players set with the board
     # ai players is the list of player positions that
     # indicates that a player at that position is managed by ai
     #
     # current player is set from 1..6 as defined in config
+
+    def does_handle_event(self, event):
+        if isinstance(event, TickEvent):
+            return 0
+        return 1
+
+    def handle_event(self, event):
+        # Whenever View is ready provide pieces and board
+        if isinstance(event, SubModulesLoadedEvent):
+            if event.module == Conf.VIEW and event.sub_module == Conf.GAME:
+                self.post(BoardCreatedEvent(self.get_board_grid()), Conf.VIEW)
+                self.post(PiecesCreatedEvent(self.get_pieces()), Conf.VIEW)
+        elif isinstance(event, GameObjectClickEvent):
+            if event.typ == Conf.GAME_CONTROL:
+                pass
+                # music on/off
+                # sound on/off
+                # save/load
+                # restart
+            elif event.typ == Conf.GAME_PLAY:
+                # Piece not selected
+                if self.piece_selected == 0:
+                    if not self.is_own_piece(event.value):
+                        return
+                    else:
+                        self.select_piece(event.value)
+                elif self.piece_selected == 1:
+                    # Piece already selected
+                    if self.piece_selected_loc == event.value:
+                        # Piece deselection
+                        self.deselect_piece(event.value)
+                    elif self.is_own_piece(event.value):
+                        # Piece reselection
+                        self.reselect_piece(self.piece_selected_loc, event.value)
+                    elif self.is_valid_move(self.piece_selected_loc, event.value):
+                        # Piece movement
+                        self.move(event.value)
+                        self.deselect_piece(event.value)
+
+                # select/deselect -> show/remove hints
+                # move
+                # undo move
+
+    def select_piece(self, loc):
+        self.piece_selected = 1
+        self.piece_selected_loc = loc
+        self.post(PieceSelectedEvent(loc), Conf.VIEW)
+
+    def deselect_piece(self, loc):
+        self.piece_selected = 0
+        self.piece_selected_loc = (-1, -1)
+        self.post(PieceDeSelectedEvent(loc), Conf.VIEW)
+
+    def reselect_piece(self, loc_no, loc_yes):
+        self.post(PieceDeSelectedEvent(loc_no), Conf.VIEW)
+        self.post(PieceSelectedEvent(loc_yes), Conf.VIEW)
+        self.piece_selected_loc = loc_yes
+
+    def is_valid_move(self, loc_start, loc_end):
+        # self.is_reachable(loc_start, loc_end)
+        # create list of rechable fields, from loc_start
+        # if loc_end in the list
+        # and is empty of course
+        return 1
+
+    def is_reachable(self, loc_start, loc_end):
+        return 1
 
     def set_ai_at_random(self):
         pass
@@ -99,8 +170,15 @@ class GameModel(MVCObject):
     def not_free_field(self, loc):
         return self.board.get_field(loc) != 0
 
-    def not_reachable_field(self):
-        return False
+    def is_own_piece(self, loc):
+        piece = self.board.get_field(loc)
+        return piece == self.current_player
+
+    def is_reachable_field(self, loc):
+        return 1
+
+    def not_reachable_field(self, loc):
+        return 0
 
     def valid_move(self):
         if self.not_move_own():
@@ -114,9 +192,12 @@ class GameModel(MVCObject):
         self.board.set_field(end, self.board.get_field(start))
         self.board.set_field(start, 0)
 
-    def move(self, start, end):
-        if self.valid_move():
-            self.make_move(start, end)
+    def move(self, loc):
+        self.make_move(self.piece_selected_loc, loc)
+        self.post(PieceMoveEvent(self.piece_selected_loc, loc), Conf.VIEW)
+        self.piece_selected = 0
+        self.piece_selected_loc = (-1, -1)
+        self.next_player()
 
     def next_player(self):
         if self.current_player < self.number_of_players:
@@ -150,36 +231,6 @@ class GameModel(MVCObject):
                 if field != Conf.non_playable:
                     fields.append({'x': x, 'y': y, 'val': 0})
         return fields
-
-    def does_handle_event(self, event):
-        if isinstance(event, TickEvent):
-            return 0
-        return 1
-
-    def handle_event(self, event):
-        if isinstance(event, MenuPrevEvent):
-            self.post(MenuUnSelectEvent(self.chosen))
-            if self.chosen == 0:
-                self.chosen = len(self.data) - 1
-            else:
-                self.chosen -= 1
-            self.post(MenuSelectEvent(self.chosen))
-        elif isinstance(event, MenuNextEvent):
-            self.post(MenuUnSelectEvent(self.chosen))
-            if self.chosen < len(self.data)-1:
-                self.chosen += 1
-            else:
-                self.chosen = 0
-            self.post(MenuSelectEvent(self.chosen))
-        elif isinstance(event, ButtonHoverEvent):
-            self.post(MenuUnSelectEvent(self.chosen))
-            self.chosen = event.value
-            self.post(MenuSelectEvent(self.chosen))
-        elif isinstance(event, MenuPressEvent):
-            if self.data[self.chosen] == 'exit':
-                self.post(QuitEvent())
-            else:
-                self.post(SwitchScreenEvent(self.data[self.chosen]))
 
 
 class OptionsModel(MVCObject):
@@ -267,30 +318,30 @@ class OptionsModel(MVCObject):
             return 0
         return 1
 
-    def handle_event(self, event):
-        if isinstance(event, MenuPrevEvent):
-            self.post(MenuUnSelectEvent(self.chosen))
-            if self.chosen == 0:
-                self.chosen = len(self.data) - 1
-            else:
-                self.chosen -= 1
-            self.post(MenuSelectEvent(self.chosen))
-        elif isinstance(event, MenuNextEvent):
-            self.post(MenuUnSelectEvent(self.chosen))
-            if self.chosen < len(self.data)-1:
-                self.chosen += 1
-            else:
-                self.chosen = 0
-            self.post(MenuSelectEvent(self.chosen))
-        elif isinstance(event, ButtonHoverEvent):
-            self.post(MenuUnSelectEvent(self.chosen))
-            self.chosen = event.value
-            self.post(MenuSelectEvent(self.chosen))
-        elif isinstance(event, MenuPressEvent):
-            if self.data[self.chosen] == 'exit':
-                self.post(QuitEvent())
-            else:
-                self.post(SwitchScreenEvent(self.data[self.chosen]))
+    # def handle_event(self, event):
+    #     if isinstance(event, MenuPrevEvent):
+    #         self.post(MenuUnSelectEvent(self.chosen))
+    #         if self.chosen == 0:
+    #             self.chosen = len(self.data) - 1
+    #         else:
+    #             self.chosen -= 1
+    #         self.post(MenuSelectEvent(self.chosen))
+    #     elif isinstance(event, MenuNextEvent):
+    #         self.post(MenuUnSelectEvent(self.chosen))
+    #         if self.chosen < len(self.data)-1:
+    #             self.chosen += 1
+    #         else:
+    #             self.chosen = 0
+    #         self.post(MenuSelectEvent(self.chosen))
+    #     elif isinstance(event, ButtonHoverEvent):
+    #         self.post(MenuUnSelectEvent(self.chosen))
+    #         self.chosen = event.value
+    #         self.post(MenuSelectEvent(self.chosen))
+    #     elif isinstance(event, MenuPressEvent):
+    #         if self.data[self.chosen] == 'exit':
+    #             self.post(QuitEvent())
+    #         else:
+    #             self.post(SwitchScreenEvent(self.data[self.chosen]))
 
 '''
 Board class. Board can be customized to:

@@ -3,12 +3,14 @@ from pygame.constants import *
 from diamond_game import *
 
 
-class MasterControllerThreaded(MVCObject):
+class MasterController(MVCObject):
     def __init__(self, ev_manager):
         MVCObject.__init__(self, ev_manager, '[controller]')
-        self.name = '[view]'
-        self.sub_classes = {'menu': [MenuController], 'game': [GameController], 'options': [OptionsController]}
-        self.switch_sub_modules('menu')
+        self.id = Conf.CONTROLLER
+        self.sub_classes = {Conf.MENU: [MenuController],
+                            Conf.GAME: [GameController],
+                            Conf.OPTIONS: [OptionsController]}
+        self.switch_sub_modules(Conf.MENU)
 
     @property
     def get_next_event(self):
@@ -34,7 +36,6 @@ class MasterControllerThreaded(MVCObject):
                     # Send quit event and Terminate Controller
                     cur_event = QuitEvent()
                     self.event_manager.post(cur_event, Conf.ALL)
-                    running = 0
                 else:
                     # find if a sub_module can handle the event
                     for a_controller in self.sub_modules:
@@ -56,31 +57,25 @@ class MenuController(MVCObject):
         return 0
 
     def handle_py_game_event(self, event):
-        cur_event = None
         if event.type == KEYDOWN and event.key == K_ESCAPE:
-            cur_event = QuitEvent()
+            self.post(QuitEvent(), Conf.ALL)
         elif event.type == KEYDOWN and event.key == K_UP:
-            cur_event = MenuPrevEvent()
+            self.post(MenuPrevEvent(), Conf.MODEL)
         elif event.type == KEYDOWN and event.key == K_DOWN:
-            cur_event = MenuNextEvent()
+            self.post(MenuNextEvent(), Conf.MODEL)
         elif event.type == KEYDOWN and (event.key == K_RETURN or event.key == K_SPACE):
-            cur_event = MenuPressEvent()
+            self.post(MenuPressEvent(), Conf.MODEL)
         elif event.type == MOUSEBUTTONDOWN:
             button = event.button
             if button == 1:
-                cur_event = MouseClickEvent(event.pos)
+                self.post(MouseClickEvent(event.pos), Conf.VIEW)
         elif event.type == MOUSEMOTION:
-            cur_event = MouseMotionEvent(event.pos)
-        if cur_event:
-            self.event_manager.post(cur_event, Conf.VIEW)
-            self.event_manager.post(cur_event, Conf.MODEL)
-            if isinstance(event, QuitEvent):
-                self.event_manager.post(cur_event, Conf.CONTROLLER)
+            self.post(MouseMotionEvent(event.pos), Conf.VIEW)
 
 
 class GameController(MVCObject):
     def __init__(self, ev_manager):
-        MVCObject.__init__(self, ev_manager)
+        MVCObject.__init__(self, ev_manager, '[GameController]')
 
     def does_handle_event(self, event):
         if event.type == KEYDOWN or event.type == MOUSEBUTTONDOWN or event.type == MOUSEMOTION:
@@ -88,23 +83,12 @@ class GameController(MVCObject):
         return 0
 
     def handle_py_game_event(self, event):
-        cur_event = None
         if event.type == KEYDOWN and event.key == K_ESCAPE:
-            cur_event = QuitEvent()
-        elif event.type == KEYDOWN and event.key == K_UP:
-            cur_event = MenuPrevEvent()
-        elif event.type == KEYDOWN and event.key == K_DOWN:
-            cur_event = MenuNextEvent()
-        elif event.type == KEYDOWN and (event.key == K_RETURN or event.key == K_SPACE):
-            cur_event = MenuPressEvent()
+            self.post(SwitchScreenEvent(Conf.MENU), Conf.ALL)
         elif event.type == MOUSEBUTTONDOWN:
             button = event.button
             if button == 1:
-                cur_event = MouseClickEvent(event.pos)
-        elif event.type == MOUSEMOTION:
-            cur_event = MouseMotionEvent(event.pos)
-        if cur_event:
-            self.event_manager.post(cur_event)
+                self.post(MouseClickEvent(event.pos), Conf.VIEW)
 
 
 class OptionsController(MVCObject):
@@ -134,7 +118,6 @@ class OptionsController(MVCObject):
             cur_event = MouseMotionEvent(event.pos)
         if cur_event:
             self.event_manager.post(cur_event)
-
 
 
 class KeyboardController:

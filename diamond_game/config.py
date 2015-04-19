@@ -8,7 +8,19 @@ class Conf(object):
     VIEW = 3
     CONTROLLER = 4
 
-    debug_dict = {1: 'ALL', 2: 'MODEL', 3: 'VIEW', 4: 'CONTROLLER'}
+    MENU = 5
+    OPTIONS = 6
+    GAME = 7
+
+    EXIT = 99
+
+    GAME_PLAY = 50
+    GAME_CONTROL = 51
+
+    debug_dict = {1: 'ALL', 2: 'MODEL', 3: 'VIEW',
+                  4: 'CONTROLLER', 5: 'MENU',
+                  6: 'OPTIONS', 7: 'GAME',
+                  99: 'EXIT'}
 
     # Board constants
     non_playable = -1
@@ -42,6 +54,8 @@ class Conf(object):
     piece_rad = 10
     piece_size = piece_rad * 2
     y_separation = int(math.sin(math.pi/3) * piece_rad)
+    board_x_offset = 0
+    board_y_offset = 0
 
     # Menu View
     b1_loc = screen_size[0]/2, screen_size[0]/2 - 30

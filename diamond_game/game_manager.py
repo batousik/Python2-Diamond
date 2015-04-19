@@ -66,7 +66,7 @@ class ButtonHoverEvent(Event):
 
 class SwitchScreenEvent(Event):
     def __init__(self, val):
-        Event.__init__(self, "Switch Screen Event: " + str(val))
+        Event.__init__(self, "Switch Screen Event: " + Conf.debug_dict.get(val))
         self.value = val
 
 
@@ -80,6 +80,52 @@ class PiecesCreatedEvent(Event):
     def __init__(self, val):
         Event.__init__(self, "Pieces Create Event: " + str(val))
         self.value = val
+
+
+class SubModulesLoadedEvent(Event):
+    def __init__(self, module, sub_module):
+        Event.__init__(self, "SubModulesLoadedEvent: " +
+                       Conf.debug_dict.get(module) + ": " +
+                       Conf.debug_dict.get(sub_module))
+        self.module = module
+        self.sub_module = sub_module
+
+
+class GameObjectClickEvent(Event):
+    def __init__(self, typ, val):
+        Event.__init__(self, "GameObjectClickEvent: " + str(typ) + " " + str(val))
+        self.typ = typ
+        self.value = val
+
+
+class HintsCreatedEvent(Event):
+    def __init__(self, val):
+        Event.__init__(self, "HintsCreatedEvent: " + str(val))
+        self.value = val
+
+
+class HintsDestroyedEvent(Event):
+    def __init__(self):
+        Event.__init__(self, "HintsDestroyedEvent")
+
+
+class PieceSelectedEvent(Event):
+    def __init__(self, val):
+        Event.__init__(self, "PieceSelectedEvent: " + str(val))
+        self.value = val
+
+
+class PieceDeSelectedEvent(Event):
+    def __init__(self, val):
+        Event.__init__(self, "PieceDeSelectedEvent: " + str(val))
+        self.value = val
+
+
+class PieceMoveEvent(Event):
+    def __init__(self, start, end):
+        Event.__init__(self, "PieceMoveEvent: " + str(start) + " " + str(end))
+        self.start = start
+        self.end = end
 
 
 class EventManager(object):
@@ -140,6 +186,7 @@ class MVCObject(Thread):
     def __init__(self, ev_manager, name):
         Thread.__init__(self)
         self.thread_name = name
+        self.id = 0
         self.event_manager = ev_manager
         self.sub_modules = []
         self.sub_classes = {}
@@ -166,6 +213,7 @@ class MVCObject(Thread):
         for a_class in self.sub_classes[key]:
             new_module = a_class(self.event_manager)
             self.sub_modules.append(new_module)
+        self.post(SubModulesLoadedEvent(self.id, key), Conf.ALL)
 
 if __name__ == "__main__":
     raise Exception("Unexpected")
