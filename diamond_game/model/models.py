@@ -1,3 +1,4 @@
+import sys
 from diamond_game import *
 
 
@@ -14,27 +15,34 @@ class MasterModel(MVCObject):
     def get_next_event(self):
         return self.event_manager.get_next_model_event()
 
+    # noinspection PyBroadException
     def run(self):
         running = 1
-        while running:
-            # Check model's event queue
-            event = self.get_next_event
-            # Handle events
-            # If quit event then terminate
-            if isinstance(event, QuitEvent):
-                print self.thread_name + ' is shutting down'
-                running = 0
-            elif isinstance(event, SwitchScreenEvent):
-                # Switch sub_modules on request
-                self.switch_sub_modules(event.value)
-            else:
-                for a_model in self.sub_modules:
-                    # Look for a model that accepts event
-                    if a_model.does_handle_event(event):
-                        # Let model handle event
-                        a_model.handle_event(event)
-                        # Stop other models from handling current event
-                        break
+        try:
+            while running:
+                # Check model's event queue
+                event = self.get_next_event
+                # Handle events
+                # If quit event then terminate
+                if isinstance(event, QuitEvent):
+                    print self.thread_name + ' is shutting down'
+                    running = 0
+                elif isinstance(event, SwitchScreenEvent):
+                    # Switch sub_modules on request
+                    self.switch_sub_modules(event.value)
+                else:
+                    for a_model in self.sub_modules:
+                        # Look for a model that accepts event
+                        if a_model.does_handle_event(event):
+                            # Let model handle event
+                            a_model.handle_event(event)
+                            # Stop other models from handling current event
+                            break
+        except:
+            e = sys.exc_info()[0]
+            print '>>>>>>>>>>> Fatal Error in: ' + self.thread_name
+            print e
+            self.post(QuitEvent(), Conf.ALL)
 
 
 class MenuModel(MVCObject):
@@ -42,6 +50,7 @@ class MenuModel(MVCObject):
         MVCObject.__init__(self, ev_manager, '[MenuModel]')
         self.data = [Conf.GAME, Conf.OPTIONS, Conf.EXIT]
         self.chosen = 0
+    # TODO: if selected - do not reselect
 
     def does_handle_event(self, event):
         if isinstance(event, TickEvent):

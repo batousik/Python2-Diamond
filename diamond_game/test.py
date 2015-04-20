@@ -1,7 +1,8 @@
+import os
 import pygame
 import sys
 from diamond_game.model.models import Board
-
+import Queue
 
 def main():
     pygame.init()
@@ -30,6 +31,16 @@ def main():
             screen.blit(ball, ballrect)
             pygame.display.flip()
 
+a = Queue.Queue(0)
+a.put(1)
+a.put(1)
+a.put(1)
+a.put(1)
+
+def geta():
+    if not a.empty():
+        return a.get()
+
 
 if __name__ == "__main__":
     x = 5
@@ -40,4 +51,14 @@ if __name__ == "__main__":
     board.init_board()
     board.print_board()
     print -x
+    for file in os.listdir("sounds"):
+        fullname = os.path.join('sounds', file)
+        print fullname
+
+    event = geta()
+    print event
+    while event is not None:
+        print event
+        event = geta()
+
     # main()

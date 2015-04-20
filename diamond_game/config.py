@@ -9,6 +9,7 @@ class Conf(object):
     MODEL = 2
     VIEW = 3
     CONTROLLER = 4
+    SOUND = 41
 
     MENU = 5
     OPTIONS = 6
@@ -25,7 +26,7 @@ class Conf(object):
     debug_dict = {1: 'ALL', 2: 'MODEL', 3: 'VIEW',
                   4: 'CONTROLLER', 5: 'MENU',
                   6: 'OPTIONS', 7: 'GAME',
-                  99: 'EXIT'}
+                  99: 'EXIT', 41: 'SOUND'}
 
     # Board constants
     NON_PLAYABLE = -1

@@ -1,5 +1,6 @@
 import pygame
 from pygame.constants import *
+import sys
 from diamond_game import *
 
 
@@ -16,35 +17,42 @@ class MasterController(MVCObject):
     def get_next_event(self):
         return self.event_manager.get_next_controller_event()
 
+    # noinspection PyBroadException
     def run(self):
         running = 1
-        while running:
-            # Check controller's event queue
-            event = self.get_next_event
-            # Handle events
-            # If quit event then terminate
-            if isinstance(event, QuitEvent):
-                print self.thread_name + ' is shutting down'
-                running = 0
-            elif isinstance(event, SwitchScreenEvent):
-                # Switch sub_modules on request
-                self.switch_sub_modules(event.value)
-            for py_game_event in pygame.event.get():
-                # Handle PyGame events
-                # Game end event
-                if py_game_event.type == QUIT:
-                    # Send quit event and Terminate Controller
-                    cur_event = QuitEvent()
-                    self.event_manager.post(cur_event, Conf.ALL)
-                else:
-                    # find if a sub_module can handle the event
-                    for a_controller in self.sub_modules:
-                        # Look for a controller that accepts event
-                        if a_controller.does_handle_event(py_game_event):
-                            # Let controller handle event
-                            a_controller.handle_py_game_event(py_game_event)
-                            # Stop other controllers from handling current event
-                            break
+        try:
+            while running:
+                # Check controller's event queue
+                event = self.get_next_event
+                # Handle events
+                # If quit event then terminate
+                if isinstance(event, QuitEvent):
+                    print self.thread_name + ' is shutting down'
+                    running = 0
+                elif isinstance(event, SwitchScreenEvent):
+                    # Switch sub_modules on request
+                    self.switch_sub_modules(event.value)
+                for py_game_event in pygame.event.get():
+                    # Handle PyGame events
+                    # Game end event
+                    if py_game_event.type == QUIT:
+                        # Send quit event and Terminate Controller
+                        cur_event = QuitEvent()
+                        self.post(cur_event, Conf.ALL)
+                    else:
+                        # find if a sub_module can handle the event
+                        for a_controller in self.sub_modules:
+                            # Look for a controller that accepts event
+                            if a_controller.does_handle_event(py_game_event):
+                                # Let controller handle event
+                                a_controller.handle_py_game_event(py_game_event)
+                                # Stop other controllers from handling current event
+                                break
+        except:
+            e = sys.exc_info()[0]
+            print '>>>>>>>>>>> Fatal Error in: ' + self.thread_name
+            print e
+            self.post(QuitEvent(), Conf.ALL)
 
 
 class MenuController(MVCObject):
@@ -64,6 +72,7 @@ class MenuController(MVCObject):
         elif event.type == KEYDOWN and event.key == K_DOWN:
             self.post(MenuNextEvent(), Conf.MODEL)
         elif event.type == KEYDOWN and (event.key == K_RETURN or event.key == K_SPACE):
+            self.post(SoundPlayEvent('menu_click'), Conf.SOUND)
             self.post(MenuPressEvent(), Conf.MODEL)
         elif event.type == MOUSEBUTTONDOWN:
             button = event.button

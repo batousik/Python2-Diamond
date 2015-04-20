@@ -144,6 +144,12 @@ class RemoveAvailableLocs(Event):
         self.locs = locs
 
 
+class SoundPlayEvent(Event):
+    def __init__(self, sound_name):
+        Event.__init__(self, "SoundPlayEvent: " + str(sound_name))
+        self.sound_name = sound_name
+
+
 class EventManager(object):
     """Class to manage all of the events generated in the Game"""
     def __init__(self):
@@ -152,6 +158,7 @@ class EventManager(object):
         self.model_event_queue = Queue.Queue(0)
         self.view_event_queue = Queue.Queue(0)
         self.controller_event_queue = Queue.Queue(0)
+        self.sound_event_queue = Queue.Queue(0)
         # locks to queue access
         self.model_locked = 0
         self.view_locked = 0
@@ -168,6 +175,7 @@ class EventManager(object):
             self.view_event_queue.put(event)
             self.model_event_queue.put(event)
             self.controller_event_queue.put(event)
+            self.sound_event_queue.put(event)
         elif destination == Conf.MODEL:
             if not self.model_locked:
                 self.model_event_queue.put(event)
@@ -177,9 +185,10 @@ class EventManager(object):
         elif destination == Conf.CONTROLLER:
             if not self.controller_locked:
                 self.controller_event_queue.put(event)
+        elif destination == Conf.SOUND:
+                self.sound_event_queue.put(event)
         if Conf.DEBUG:
             self.debug(event, destination)
-        """Post a new event.  It will be broadcast to all listeners"""
 
     def manage_lock(self, thread_to_lock, action):
         """
@@ -217,6 +226,14 @@ class EventManager(object):
         """
         if not self.controller_event_queue.empty():
             return self.controller_event_queue.get()
+
+    def get_next_sound_event(self):
+        """
+        :return:
+        :rtype : Event
+        """
+        if not self.sound_event_queue.empty():
+            return self.sound_event_queue.get()
 
     @staticmethod
     def debug(event, destination):

@@ -1,6 +1,7 @@
 import pygame
 from pygame.constants import DOUBLEBUF
 from pygame.sprite import DirtySprite, LayeredDirty
+import sys
 from diamond_game import *
 import time
 
@@ -47,6 +48,7 @@ class MasterView(MVCObject):
         time.sleep(1)
         self.switch_sub_modules(Conf.MENU)
 
+    @property
     def get_next_event(self):
         return self.event_manager.get_next_view_event()
 
@@ -61,27 +63,34 @@ class MasterView(MVCObject):
     #     self.screen.blit(self.background, (0, 0))
     #     pygame.display.flip()
 
+    # noinspection PyBroadException
     def run(self):
         running = 1
-        while running:
-            event = self.get_next_event()
-            if isinstance(event, QuitEvent):
-                # Terminate view thread
-                print self.thread_name + ' is shutting down'
-                running = 0
-            elif isinstance(event, TickEvent):
-                # Update view according to FPS
-                for a_view in self.sub_modules:
-                    view_bg = a_view.get_image()
-                    self.background.blit(view_bg, (0, 0))
-                self.screen.blit(self.background, (0, 0))
-                pygame.display.flip()
-            elif isinstance(event, SwitchScreenEvent):
-                self.switch_sub_modules(event.value)
-            else:
-                for a_view in self.sub_modules:
-                    if a_view.does_handle_event(event):
-                        a_view.handle_event(event)
+        try:
+            while running:
+                event = self.get_next_event
+                if isinstance(event, QuitEvent):
+                    # Terminate view thread
+                    print self.thread_name + ' is shutting down'
+                    running = 0
+                elif isinstance(event, TickEvent):
+                    # Update view according to FPS
+                    for a_view in self.sub_modules:
+                        view_bg = a_view.get_image()
+                        self.background.blit(view_bg, (0, 0))
+                    self.screen.blit(self.background, (0, 0))
+                    pygame.display.flip()
+                elif isinstance(event, SwitchScreenEvent):
+                    self.switch_sub_modules(event.value)
+                else:
+                    for a_view in self.sub_modules:
+                        if a_view.does_handle_event(event):
+                            a_view.handle_event(event)
+        except:
+            e = sys.exc_info()[0]
+            print '>>>>>>>>>>> Fatal Error in: ' + self.thread_name
+            print e
+            self.post(QuitEvent(), Conf.ALL)
 
 
 class MenuView(MVCView):
@@ -110,6 +119,7 @@ class MenuView(MVCView):
         elif isinstance(event, MouseClickEvent):
             for i in range(0, len(self.buttons)):
                 if self.buttons[i].rect.collidepoint(event.position):
+                    self.post(SoundPlayEvent('menu_click'), Conf.SOUND)
                     self.post(MenuPressEvent(), Conf.MODEL)
                     break
 
@@ -141,8 +151,10 @@ class GameView(MVCView):
             # move to new location
             self.move_piece(event.start, event.end)
         elif isinstance(event, PieceSelectedEvent):
+            self.post(SoundPlayEvent('select'), Conf.SOUND)
             self.set_piece_selected(event.value, 1)
         elif isinstance(event, PieceDeSelectedEvent):
+            self.post(SoundPlayEvent('deselect'), Conf.SOUND)
             self.set_piece_selected(event.value, 0)
         elif isinstance(event, CreateAvailableLocs):
             self.set_available_locs(event.locs, 1)
