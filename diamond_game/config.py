@@ -2,6 +2,8 @@ import math
 
 
 class Conf(object):
+    # Debug mode on/off 1/0
+    DEBUG = 1
     # Program constants
     ALL = 1
     MODEL = 2
@@ -17,6 +19,9 @@ class Conf(object):
     GAME_PLAY = 50
     GAME_CONTROL = 51
 
+    LOCK_ACTION = 1
+    UNLOCK_ACTION = 0
+
     debug_dict = {1: 'ALL', 2: 'MODEL', 3: 'VIEW',
                   4: 'CONTROLLER', 5: 'MENU',
                   6: 'OPTIONS', 7: 'GAME',
@@ -31,6 +36,28 @@ class Conf(object):
     p4 = 4
     p5 = 5
     p6 = 6
+
+    DIRECTION_UP_LEFT = (-1, -1)
+    DIRECTION_UP_RIGHT = (1, -1)
+    DIRECTION_DOWN_LEFT = (-1, 1)
+    DIRECTION_DOWN_RIGHT = (1, 1)
+    DIRECTION_LEFT = (-2, 0)
+    DIRECTION_RIGHT = (2, 0)
+
+    DIRECTION_DOUBLE_UP_LEFT = (-2, -2)
+    DIRECTION_DOUBLE_UP_RIGHT = (2, -2)
+    DIRECTION_DOUBLE_DOWN_LEFT = (-2, 2)
+    DIRECTION_DOUBLE_DOWN_RIGHT = (2, 2)
+    DIRECTION_DOUBLE_LEFT = (-4, 0)
+    DIRECTION_DOUBLE_RIGHT = (4, 0)
+
+    JUMP_DIRECTIONS = [DIRECTION_DOUBLE_UP_LEFT, DIRECTION_DOUBLE_UP_RIGHT,
+                       DIRECTION_DOUBLE_DOWN_LEFT, DIRECTION_DOUBLE_DOWN_RIGHT,
+                       DIRECTION_DOUBLE_LEFT, DIRECTION_DOUBLE_RIGHT]
+
+    NORMAL_DIRECTIONS = [DIRECTION_UP_LEFT, DIRECTION_UP_RIGHT,
+                         DIRECTION_DOWN_LEFT, DIRECTION_DOWN_RIGHT,
+                         DIRECTION_LEFT, DIRECTION_RIGHT]
 
     # Colours
     red = (255, 0, 0)
@@ -48,7 +75,7 @@ class Conf(object):
     default_size_player_base = 4
 
     # Views
-    screen_size = 600, 600
+    screen_size = 800, 600
 
     # Game View
     piece_rad = 10

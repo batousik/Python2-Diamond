@@ -6,11 +6,13 @@
       <w>errno</w>
       <w>framerate</w>
       <w>initalise</w>
+      <w>locs</w>
       <w>midtop</w>
       <w>mrow</w>
       <w>pygame</w>
       <w>rownum</w>
       <w>startloc</w>
+      <w>topleft</w>
     </words>
   </dictionary>
 </component>

@@ -1,5 +1,6 @@
 import pygame
 import sys
+from diamond_game.model.models import Board
 
 
 def main():
@@ -31,4 +32,11 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    x = 5
+    for i in range(5):
+        print 1
+    board = Board()
+    board.make_board()
+    board.init_board()
+    board.print_board()
+    # main()

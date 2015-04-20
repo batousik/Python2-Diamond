@@ -110,15 +110,19 @@ class HintsDestroyedEvent(Event):
 
 
 class PieceSelectedEvent(Event):
-    def __init__(self, val):
-        Event.__init__(self, "PieceSelectedEvent: " + str(val))
-        self.value = val
+    """Has uid piece attribute
+    """
+    def __init__(self, uid):
+        Event.__init__(self, "PieceSelectedEvent: " + str(uid))
+        self.value = uid
 
 
 class PieceDeSelectedEvent(Event):
-    def __init__(self, val):
-        Event.__init__(self, "PieceDeSelectedEvent: " + str(val))
-        self.value = val
+    """Has uid piece attribute
+    """
+    def __init__(self, uid):
+        Event.__init__(self, "PieceDeSelectedEvent: " + str(uid))
+        self.value = uid
 
 
 class PieceMoveEvent(Event):
@@ -126,6 +130,18 @@ class PieceMoveEvent(Event):
         Event.__init__(self, "PieceMoveEvent: " + str(start) + " " + str(end))
         self.start = start
         self.end = end
+
+
+class CreateAvailableLocs(Event):
+    def __init__(self, locs):
+        Event.__init__(self, "CreateAvailableLocs: " + str(locs))
+        self.locs = locs
+
+
+class RemoveAvailableLocs(Event):
+    def __init__(self, locs):
+        Event.__init__(self, "RemoveAvailableLocs: " + str(locs))
+        self.locs = locs
 
 
 class EventManager(object):
@@ -136,27 +152,51 @@ class EventManager(object):
         self.model_event_queue = Queue.Queue(0)
         self.view_event_queue = Queue.Queue(0)
         self.controller_event_queue = Queue.Queue(0)
+        # locks to queue access
+        self.model_locked = 0
+        self.view_locked = 0
+        self.controller_locked = 0
 
     def post(self, event, destination):
         """
         Method that allows to
         pass events to corresponding parts of the program
+        events are not posted if the resource is locked
         """
         if destination == Conf.ALL:
+            # Only switch and quit events are send to all
             self.view_event_queue.put(event)
             self.model_event_queue.put(event)
             self.controller_event_queue.put(event)
         elif destination == Conf.MODEL:
-            self.model_event_queue.put(event)
+            if not self.model_locked:
+                self.model_event_queue.put(event)
         elif destination == Conf.VIEW:
-            self.view_event_queue.put(event)
+            if not self.view_locked:
+                self.view_event_queue.put(event)
         elif destination == Conf.CONTROLLER:
-            self.controller_event_queue.put(event)
-        self.debug(event, destination)
+            if not self.controller_locked:
+                self.controller_event_queue.put(event)
+        if Conf.DEBUG:
+            self.debug(event, destination)
         """Post a new event.  It will be broadcast to all listeners"""
+
+    def manage_lock(self, thread_to_lock, action):
+        """
+        Method that allows to optionally allow or
+        disallow adding events to queues.
+        If queue is locked for access then events will miss out
+        """
+        if thread_to_lock == Conf.MODEL:
+            self.model_locked = action
+        elif thread_to_lock == Conf.VIEW:
+            self.view_locked = action
+        elif thread_to_lock == Conf.CONTROLLER:
+            self.controller_locked = action
 
     def get_next_model_event(self):
         """
+        :return:
         :rtype : Event
         """
         if not self.model_event_queue.empty():
@@ -164,6 +204,7 @@ class EventManager(object):
 
     def get_next_view_event(self):
         """
+        :return:
         :rtype : Event
         """
         if not self.view_event_queue.empty():
@@ -171,6 +212,7 @@ class EventManager(object):
 
     def get_next_controller_event(self):
         """
+        :return:
         :rtype : Event
         """
         if not self.controller_event_queue.empty():

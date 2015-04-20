@@ -2,6 +2,7 @@ import pygame
 from pygame.constants import DOUBLEBUF
 from pygame.sprite import DirtySprite, LayeredDirty
 from diamond_game import *
+import time
 
 
 class MVCView(MVCObject):
@@ -10,8 +11,11 @@ class MVCView(MVCObject):
         self.sprite_group = LayeredDirty()
         self.images = {}
         self.background = pygame.Surface(Conf.screen_size)
+        self.background_sprite = BackGround()
+        self.sprite_group.add(self.background_sprite)
 
     def get_image(self):
+        self.background = pygame.Surface(Conf.screen_size)
         self.sprite_group.update()
         self.sprite_group.draw(self.background)
         return self.background
@@ -32,12 +36,15 @@ class MasterView(MVCObject):
         # screen = pygame.display.set_mode(size, FULLSCREEN)  # make window
         # make window and DOUBLEBUF for smooth animation
         self.screen = pygame.display.set_mode(Conf.screen_size, DOUBLEBUF)
+        self.background_sprite = BackGround()
         self.background = pygame.Surface(Conf.screen_size)
+        self.background.blit(self.background_sprite.image, self.background_sprite.rect)
         # transfer background
         self.screen.blit(self.background, (0, 0))
         # update screen
         pygame.display.flip()
         # First view is menu
+        time.sleep(1)
         self.switch_sub_modules(Conf.MENU)
 
     def get_next_event(self):
@@ -114,6 +121,7 @@ class GameView(MVCView):
         self.pieces_start_locs = []
         # list of pieces sprites
         self.pieces = []
+        self.fields = []
         self.click_sprites = LayeredDirty()
         # Load images
         # Load sound
@@ -129,9 +137,17 @@ class GameView(MVCView):
             self.pieces_start_locs = event.value
             self.create_pieces()
         elif isinstance(event, PieceMoveEvent):
-            # get piece at self start
-            # move to self end
+            # get piece by uid
+            # move to new location
             self.move_piece(event.start, event.end)
+        elif isinstance(event, PieceSelectedEvent):
+            self.set_piece_selected(event.value, 1)
+        elif isinstance(event, PieceDeSelectedEvent):
+            self.set_piece_selected(event.value, 0)
+        elif isinstance(event, CreateAvailableLocs):
+            self.set_available_locs(event.locs, 1)
+        elif isinstance(event, RemoveAvailableLocs):
+            self.set_available_locs(event.locs, 0)
         elif isinstance(event, MouseClickEvent):
             for sprite in self.click_sprites:
                 if sprite.rect.collidepoint(event.position):
@@ -141,40 +157,60 @@ class GameView(MVCView):
                         Conf.MODEL)
                     break
 
-        # if isinstance(event, MenuSelectEvent):
-        #     self.buttons[event.value].set_selected(1)
-        # elif isinstance(event, MenuUnSelectEvent):
-        #     self.buttons[event.value].set_selected(0)
-        # elif isinstance(event, MouseMotionEvent):
-        #     for i in range(0, len(self.buttons)):
-        #         if self.buttons[i].rect.collidepoint(event.position):
-        #             self.post(ButtonHoverEvent(i))
-        #             break
-
     def create_board(self):
+        """
+        Create Field sprites, with colour (empty)
+        from list of received locations
+        """
         for field in self.fields_start_locs:
-            loc = Conf.loc_to_view(field['x'], field['y'])
-            new_field = Field(field['val'], loc)
+            loc = Conf.loc_to_view(field[0], field[1])
+            new_field = Field(Conf.empty, loc)
             self.sprite_group.add(new_field)
             self.click_sprites.add(new_field)
+            self.fields.append(new_field)
 
     def create_pieces(self):
+        self.pieces = []
         for piece in self.pieces_start_locs:
             loc = Conf.loc_to_view(piece['x'], piece['y'])
-            new_piece = Piece(piece['val'], loc)
+            new_piece = Piece(piece['piece'], loc)
             self.click_sprites.add(new_piece)
             self.sprite_group.add(new_piece)
             self.pieces.append(new_piece)
 
-    def move_piece(self, start, end):
-        piece = self.get_piece(start)
+    def move_piece(self, uid, end):
+        piece = self.get_piece_by_uid(uid)
         piece.set_new_loc(end)
+
+    def get_piece_by_uid(self, uid):
+        """Retrieves pieces sprite object from the list by uid.
+        :return Piece: A piece sprite object.
+        """
+        for piece in self.pieces:
+            if piece.uid == uid:
+                return piece
 
     def get_piece(self, loc):
         view_loc = Conf.loc_to_view(loc[0], loc[1])
         for piece in self.pieces:
             if piece.is_collided(view_loc):
                 return piece
+
+    def set_piece_selected(self, uid, val):
+        """Retrieves piece and sets it's value to selected/deselected.
+        :param uid: Piece uid.
+        :param val: value 1 is selected 0 is deselected.
+        """
+        piece = self.get_piece_by_uid(uid)
+        if piece:
+            piece.selected = val
+
+    def set_available_locs(self, locs, val):
+        for loc in locs:
+            view_loc = Conf.loc_to_view(loc[0], loc[1])
+            for field in self.fields:
+                if field.is_collided(view_loc):
+                    field.highlighted = val
 
 
 class OptionsView(MVCView):
@@ -187,14 +223,15 @@ class OptionsView(MVCView):
 
 
 class Piece(DirtySprite):
-    def __init__(self, player, loc):
+    def __init__(self, a_piece, loc):
         DirtySprite.__init__(self)
         self.image = pygame.Surface([Conf.piece_size, Conf.piece_size])
-        self.image.fill(Conf.colours[player])
+        self.image.fill(Conf.colours[a_piece.value])
         self.rect = self.image.get_rect()
         self.rect.center = loc
         self.new_loc = loc
-        self.player = player
+        self.player = a_piece.value
+        self.uid = a_piece.uid
         self.selected = 0
         self.dirty = 2
         # self.dragged = False
@@ -207,7 +244,7 @@ class Piece(DirtySprite):
 
     def update(self):
         if self.selected:
-            self.image.fill(Conf.black)
+            self.image.fill(Conf.blue)
         else:
             self.image.fill(Conf.colours[self.player])
         if not self.rect.center == self.new_loc:
@@ -233,7 +270,17 @@ class Field(DirtySprite):
         self.image.fill(Conf.colours[field_type])
         self.rect = self.image.get_rect()
         self.rect.center = loc
+        self.highlighted = 0
         self.dirty = 2
+
+    def is_collided(self, view_loc):
+        return self.rect.collidepoint(view_loc)
+
+    def update(self):
+        if self.highlighted:
+            self.image.fill(Conf.blue)
+        else:
+            self.image.fill(Conf.white)
 
 
 class Button(DirtySprite):
@@ -254,6 +301,14 @@ class Button(DirtySprite):
             self.image.fill((100, 100, 100))
         else:
             self.image.fill((200, 200, 200))
+
+
+class BackGround(DirtySprite):
+    def __init__(self):
+        DirtySprite.__init__(self)
+        self.image, self.rect = Utils.load_image('bg_plain.png')
+        self.rect.topleft = 0, 0
+        self.dirty = 2
 
 
 if __name__ == "__main__":
