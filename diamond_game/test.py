@@ -39,4 +39,5 @@ if __name__ == "__main__":
     board.make_board()
     board.init_board()
     board.print_board()
+    print -x
     # main()

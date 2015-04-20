@@ -10,12 +10,12 @@ class MVCView(MVCObject):
         MVCObject.__init__(self, ev_manager, name)
         self.sprite_group = LayeredDirty()
         self.images = {}
-        self.background = pygame.Surface(Conf.screen_size)
+        self.background = pygame.Surface(Conf.SCREEN_SIZE)
         self.background_sprite = BackGround()
         self.sprite_group.add(self.background_sprite)
 
     def get_image(self):
-        self.background = pygame.Surface(Conf.screen_size)
+        self.background = pygame.Surface(Conf.SCREEN_SIZE)
         self.sprite_group.update()
         self.sprite_group.draw(self.background)
         return self.background
@@ -35,9 +35,9 @@ class MasterView(MVCObject):
         pygame.display.set_caption("Chinese Checkers v 0.2")
         # screen = pygame.display.set_mode(size, FULLSCREEN)  # make window
         # make window and DOUBLEBUF for smooth animation
-        self.screen = pygame.display.set_mode(Conf.screen_size, DOUBLEBUF)
+        self.screen = pygame.display.set_mode(Conf.SCREEN_SIZE, DOUBLEBUF)
         self.background_sprite = BackGround()
-        self.background = pygame.Surface(Conf.screen_size)
+        self.background = pygame.Surface(Conf.SCREEN_SIZE)
         self.background.blit(self.background_sprite.image, self.background_sprite.rect)
         # transfer background
         self.screen.blit(self.background, (0, 0))
@@ -87,9 +87,9 @@ class MasterView(MVCObject):
 class MenuView(MVCView):
     def __init__(self, ev_manager):
         MVCView.__init__(self, ev_manager, '[MenuView]')
-        b1 = Button(Conf.green, Conf.b1_loc, (100, 20))
-        b2 = Button(Conf.green, Conf.b2_loc, (100, 20))
-        b3 = Button(Conf.green, Conf.b3_loc, (100, 20))
+        b1 = Button(Conf.COL_GREEN, Conf.B1_LOC, (100, 20))
+        b2 = Button(Conf.COL_GREEN, Conf.B2_LOC, (100, 20))
+        b3 = Button(Conf.COL_GREEN, Conf.B3_LOC, (100, 20))
         b1.set_selected(1)
         self.buttons = [b1, b2, b3]
         self.sprite_group.add(b1, b2, b3)
@@ -164,7 +164,7 @@ class GameView(MVCView):
         """
         for field in self.fields_start_locs:
             loc = Conf.loc_to_view(field[0], field[1])
-            new_field = Field(Conf.empty, loc)
+            new_field = Field(Conf.EMPTY, loc)
             self.sprite_group.add(new_field)
             self.click_sprites.add(new_field)
             self.fields.append(new_field)
@@ -225,8 +225,8 @@ class OptionsView(MVCView):
 class Piece(DirtySprite):
     def __init__(self, a_piece, loc):
         DirtySprite.__init__(self)
-        self.image = pygame.Surface([Conf.piece_size, Conf.piece_size])
-        self.image.fill(Conf.colours[a_piece.value])
+        self.image = pygame.Surface([Conf.PIECE_SIZE, Conf.PIECE_SIZE])
+        self.image.fill(Conf.COLOURS[a_piece.value])
         self.rect = self.image.get_rect()
         self.rect.center = loc
         self.new_loc = loc
@@ -244,30 +244,36 @@ class Piece(DirtySprite):
 
     def update(self):
         if self.selected:
-            self.image.fill(Conf.blue)
+            self.image.fill(Conf.COL_BLUE)
         else:
-            self.image.fill(Conf.colours[self.player])
+            self.image.fill(Conf.COLOURS[self.player])
         if not self.rect.center == self.new_loc:
             x, y = self.rect.center
             new_x, new_y = self.new_loc
-            dx = 0
-            dy = 0
-            if x < new_x:
-                dx = 1
-            elif x > new_x:
-                dx = -1
-            if y < new_y:
-                dy = 1
-            elif y > new_y:
-                dy = -1
+            dx = new_x - x
+            dy = new_y - y
+
+            if dx > 0:
+                if dx > Conf.PIECE_FAST:
+                    dx = Conf.PIECE_FAST
+            elif dx < 0:
+                if dx < -Conf.PIECE_FAST:
+                    dx = -Conf.PIECE_FAST
+
+            if dy > 0:
+                if dy > Conf.PIECE_FAST:
+                    dy = Conf.PIECE_FAST
+            elif dy < 0:
+                if dy < -Conf.PIECE_FAST:
+                    dy = -Conf.PIECE_FAST
             self.rect.center = (x + dx, y + dy)
 
 
 class Field(DirtySprite):
     def __init__(self, field_type, loc):
         DirtySprite.__init__(self)
-        self.image = pygame.Surface([Conf.piece_size, Conf.piece_size])
-        self.image.fill(Conf.colours[field_type])
+        self.image = pygame.Surface([Conf.PIECE_SIZE, Conf.PIECE_SIZE])
+        self.image.fill(Conf.COLOURS[field_type])
         self.rect = self.image.get_rect()
         self.rect.center = loc
         self.highlighted = 0
@@ -278,9 +284,9 @@ class Field(DirtySprite):
 
     def update(self):
         if self.highlighted:
-            self.image.fill(Conf.blue)
+            self.image.fill(Conf.COL_BLUE)
         else:
-            self.image.fill(Conf.white)
+            self.image.fill(Conf.COL_WHITE)
 
 
 class Button(DirtySprite):

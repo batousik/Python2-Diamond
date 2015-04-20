@@ -28,14 +28,14 @@ class Conf(object):
                   99: 'EXIT'}
 
     # Board constants
-    non_playable = -1
-    empty = 0
-    p1 = 1
-    p2 = 2
-    p3 = 3
-    p4 = 4
-    p5 = 5
-    p6 = 6
+    NON_PLAYABLE = -1
+    EMPTY = 0
+    P1 = 1
+    P2 = 2
+    P3 = 3
+    P4 = 4
+    P5 = 5
+    P6 = 6
 
     DIRECTION_UP_LEFT = (-1, -1)
     DIRECTION_UP_RIGHT = (1, -1)
@@ -60,46 +60,48 @@ class Conf(object):
                          DIRECTION_LEFT, DIRECTION_RIGHT]
 
     # Colours
-    red = (255, 0, 0)
-    green = (0, 255, 0)
-    blue = (0, 0, 255)
-    dark_red = (100, 0, 0)
-    dark_blue = (0, 0, 100)
-    dark_green = (0, 100, 0)
-    white = (255, 255, 255)
-    black = (0, 0, 0)
+    COL_RED = (255, 0, 0)
+    COL_GREEN = (0, 255, 0)
+    COL_BLUE = (0, 0, 255)
+    COL_DARK_RED = (100, 0, 0)
+    COL_DARK_BLUE = (0, 0, 100)
+    COL_DARK_GREEN = (0, 100, 0)
+    COL_WHITE = (255, 255, 255)
+    COL_BLACK = (0, 0, 0)
 
-    colours = [white, red, green, blue, dark_red, dark_blue, dark_green, black]
+    COLOURS = [COL_WHITE, COL_RED, COL_GREEN, COL_BLUE, COL_DARK_RED, COL_DARK_BLUE, COL_DARK_GREEN, COL_BLACK]
 
     # Game settings
-    default_size_player_base = 4
+    DEFAULT_SIZE_PLAYER_BASE = 4
 
     # Views
-    screen_size = 800, 600
+    SCREEN_SIZE = 800, 600
 
     # Game View
-    piece_rad = 10
-    piece_size = piece_rad * 2
-    y_separation = int(math.sin(math.pi/3) * piece_rad)
-    board_x_offset = 0
-    board_y_offset = 0
+    PIECE_RAD = 10
+    PIECE_SIZE = PIECE_RAD * 2
+    Y_SEPARATION = int(math.sin(math.pi/3) * PIECE_RAD)
+    BOARD_X_OFFSET = 0
+    BOARD_Y_OFFSET = 0
+    PIECE_SLOW = 1
+    PIECE_FAST = 10
 
     # Menu View
-    b1_loc = screen_size[0]/2, screen_size[0]/2 - 30
-    b2_loc = screen_size[0]/2, screen_size[0]/2
-    b3_loc = screen_size[0]/2, screen_size[0]/2 + 30
+    B1_LOC = SCREEN_SIZE[0]/2, SCREEN_SIZE[0]/2 - 30
+    B2_LOC = SCREEN_SIZE[0]/2, SCREEN_SIZE[0]/2
+    B3_LOC = SCREEN_SIZE[0]/2, SCREEN_SIZE[0]/2 + 30
 
     @staticmethod
     def loc_to_view(x, y):
-        return x * Conf.piece_size + Conf.piece_rad, y * (Conf.piece_size+Conf.y_separation) + Conf.piece_rad
+        return x * Conf.PIECE_SIZE + Conf.PIECE_RAD, y * (Conf.PIECE_SIZE+Conf.Y_SEPARATION) + Conf.PIECE_RAD
 
     @staticmethod
     def loc_to_model(x, y):
-        return x / Conf.piece_size, y / (Conf.piece_size+Conf.y_separation)
+        return x / Conf.PIECE_SIZE, y / (Conf.PIECE_SIZE+Conf.Y_SEPARATION)
 
     # Game options
-    num_players = 2
-    num_ai_players = 2
+    NUM_PLAYERS = 2
+    NUM_AI_PLAYERS = 2
 
 
 if __name__ == "__main__":

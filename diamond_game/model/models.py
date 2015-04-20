@@ -77,13 +77,13 @@ class MenuModel(MVCObject):
 class GameModel(MVCObject):
     def __init__(self, ev_manager):
         MVCObject.__init__(self, ev_manager, '[GameModel]')
-        self.current_player = Conf.empty
-        self.size_player_triangle_base = Conf.default_size_player_base
+        self.current_player = Conf.EMPTY
+        self.size_player_triangle_base = Conf.DEFAULT_SIZE_PLAYER_BASE
         self.board = Board(self.size_player_triangle_base)
         self.number_of_players = 2
         self.ai_players = []
         self.set_ai_at_random()
-        self.current_player = Conf.p1
+        self.current_player = Conf.P1
         self.piece_selected = 0
         self.piece_selected_loc = (-1, -1)
         self.available_locations = []
@@ -105,7 +105,7 @@ class GameModel(MVCObject):
             if event.module == Conf.VIEW and event.sub_module == Conf.GAME:
                 self.board = Board(self.size_player_triangle_base)
                 self.post(BoardCreatedEvent(self.get_board_grid()), Conf.VIEW)
-                self.board.init_board(Conf.num_players)
+                self.board.init_board(Conf.NUM_PLAYERS)
                 self.post(PiecesCreatedEvent(self.get_pieces()), Conf.VIEW)
                 # TODO: resize event
                 print self.get_grid_dimensions()
@@ -227,7 +227,7 @@ class GameModel(MVCObject):
             new_loc = (loc[0] + direction[0], loc[1] + direction[1])
             if 0 <= new_loc[0] < self.board.SIZE_BOARD_X_GRID and \
                                     0<= new_loc[1] < self.board.SIZE_BOARD_Y_GRID:
-                if self.board.get_field(new_loc).value == Conf.empty:
+                if self.board.get_field(new_loc).value == Conf.EMPTY:
                     self.available_locations.append(new_loc)
 
     def add_jump_moves(self, loc):
@@ -244,15 +244,15 @@ class GameModel(MVCObject):
             if 0 <= jump_over_loc[0] < self.board.SIZE_BOARD_X_GRID and \
                                     0<= jump_over_loc[1] < self.board.SIZE_BOARD_Y_GRID:
                 # if field is a piece
-                if not self.board.get_field(jump_over_loc).value == Conf.empty and \
-                        not self.board.get_field(jump_over_loc).value == Conf.non_playable:
+                if not self.board.get_field(jump_over_loc).value == Conf.EMPTY and \
+                        not self.board.get_field(jump_over_loc).value == Conf.NON_PLAYABLE:
                     # get jump to location
                     new_loc = (loc[0] + Conf.JUMP_DIRECTIONS[i][0], loc[1] + Conf.JUMP_DIRECTIONS[i][1])
                     # if jump to location is in bounds
                     if 0 <= new_loc[0] < self.board.SIZE_BOARD_X_GRID and \
                                             0<= new_loc[1] < self.board.SIZE_BOARD_Y_GRID:
                         # if jump to location is free
-                        if self.board.get_field(new_loc).value == Conf.empty:
+                        if self.board.get_field(new_loc).value == Conf.EMPTY:
                             # if this location doesnt already exist and not the starting location
                             if not new_loc in self.available_locations and \
                                     not new_loc == self.piece_selected_loc:
@@ -355,7 +355,7 @@ class GameModel(MVCObject):
         for y in range(self.board.SIZE_BOARD_Y_GRID):
             for x in range(self.board.SIZE_BOARD_X_GRID):
                 field = self.board.get_field((x, y))
-                if field.value != Conf.non_playable and field.value != Conf.empty:
+                if field.value != Conf.NON_PLAYABLE and field.value != Conf.EMPTY:
                     pieces.append({'x': x, 'y': y, 'piece': field})
         return pieces
 
@@ -367,7 +367,7 @@ class GameModel(MVCObject):
         for y in range(self.board.SIZE_BOARD_Y_GRID):
             for x in range(self.board.SIZE_BOARD_X_GRID):
                 field = self.board.get_field((x, y))
-                if field.value != Conf.non_playable:
+                if field.value != Conf.NON_PLAYABLE:
                     fields.append((x, y))
         return fields
 
@@ -375,8 +375,8 @@ class GameModel(MVCObject):
 class OptionsModel(MVCObject):
     def __init__(self, ev_manager):
         MVCObject.__init__(self, ev_manager)
-        self.current_player = Conf.empty
-        size_player_triangle_base = Conf.default_size_player_base
+        self.current_player = Conf.EMPTY
+        size_player_triangle_base = Conf.DEFAULT_SIZE_PLAYER_BASE
         self.board = Board(size_player_triangle_base)
 
     # initialise game for players set with the board
@@ -425,15 +425,15 @@ class Board(object):
         margin_left = []
         margin_right = []
         for i in range(cnt_non_playable):
-            margin_left.append(Piece(Conf.non_playable))
+            margin_left.append(Piece(Conf.NON_PLAYABLE))
         for i in range(cnt_non_playable):
-            margin_right.append(Piece(Conf.non_playable))
+            margin_right.append(Piece(Conf.NON_PLAYABLE))
         center = []
         for i in range(1, num_fields + empties + 1):
             if i % 2 == 0:
-                center.append(Piece(Conf.non_playable))
+                center.append(Piece(Conf.NON_PLAYABLE))
             else:
-                center.append(Piece(Conf.empty))
+                center.append(Piece(Conf.EMPTY))
         return margin_left + center + margin_right
 
     # creates a board based on player base size
@@ -455,10 +455,10 @@ class Board(object):
     # initiates created board with player pieces
     def init_board(self, num_players=2):
         self.make_board()
-        players = [Conf.p1, Conf.p3, Conf.p6, Conf.p5, Conf.p4, Conf.p2]
+        players = [Conf.P1, Conf.P3, Conf.P6, Conf.P5, Conf.P4, Conf.P2]
         for index in range(len(players)):
             if players[index] > num_players:
-                players[index] = Conf.empty
+                players[index] = Conf.EMPTY
         i = self.SIZE_PLAYER_BASE_GRID
         for y in range(self.SIZE_BOARD_Y_GRID):
             row = self.board[y]
