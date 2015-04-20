@@ -87,9 +87,9 @@ class MasterView(MVCObject):
 class MenuView(MVCView):
     def __init__(self, ev_manager):
         MVCView.__init__(self, ev_manager, '[MenuView]')
-        b1 = Button(Conf.COL_GREEN, Conf.B1_LOC, (100, 20))
-        b2 = Button(Conf.COL_GREEN, Conf.B2_LOC, (100, 20))
-        b3 = Button(Conf.COL_GREEN, Conf.B3_LOC, (100, 20))
+        b1 = Button(Conf.B1_LOC, (Utils.load_image('b1_u'), Utils.load_image('b1_s')))
+        b2 = Button(Conf.B2_LOC, (Utils.load_image('b2_u'), Utils.load_image('b2_s')))
+        b3 = Button(Conf.B3_LOC, (Utils.load_image('b3_u'), Utils.load_image('b3_s')))
         b1.set_selected(1)
         self.buttons = [b1, b2, b3]
         self.sprite_group.add(b1, b2, b3)
@@ -290,10 +290,10 @@ class Field(DirtySprite):
 
 
 class Button(DirtySprite):
-    def __init__(self, colour, loc, size):
+    def __init__(self, loc, imgs):
         DirtySprite.__init__(self)
-        self.image = pygame.Surface(size)
-        self.image.fill(colour)
+        self.imgs = imgs
+        self.image = self.imgs[0]
         self.rect = self.image.get_rect()
         self.rect.center = loc
         self.selected = 0
@@ -304,15 +304,16 @@ class Button(DirtySprite):
 
     def update(self):
         if self.selected:
-            self.image.fill((100, 100, 100))
+            self.image = self.imgs[1]
         else:
-            self.image.fill((200, 200, 200))
+            self.image = self.imgs[0]
 
 
 class BackGround(DirtySprite):
     def __init__(self):
         DirtySprite.__init__(self)
-        self.image, self.rect = Utils.load_image('bg_plain.png')
+        self.image = Utils.load_image('bg_plain')
+        self.rect = self.image.get_rect()
         self.rect.topleft = 0, 0
         self.dirty = 2
 

@@ -87,9 +87,9 @@ class Conf(object):
     PIECE_FAST = 10
 
     # Menu View
-    B1_LOC = SCREEN_SIZE[0]/2, SCREEN_SIZE[0]/2 - 30
-    B2_LOC = SCREEN_SIZE[0]/2, SCREEN_SIZE[0]/2
-    B3_LOC = SCREEN_SIZE[0]/2, SCREEN_SIZE[0]/2 + 30
+    B1_LOC = SCREEN_SIZE[0]/2, SCREEN_SIZE[1]/2 - 80
+    B2_LOC = SCREEN_SIZE[0]/2, SCREEN_SIZE[1]/2
+    B3_LOC = SCREEN_SIZE[0]/2, SCREEN_SIZE[1]/2 + 80
 
     @staticmethod
     def loc_to_view(x, y):
