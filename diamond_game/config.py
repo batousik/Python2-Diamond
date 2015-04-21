@@ -2,6 +2,9 @@ import math
 
 
 class Conf(object):
+    """
+    Class for various constants required for the program
+    """
     # Debug mode on/off 1/0
     DEBUG = 1
     # Program constants
@@ -10,10 +13,12 @@ class Conf(object):
     VIEW = 3
     CONTROLLER = 4
     SOUND = 41
+    AI = 42
 
     MENU = 5
     OPTIONS = 6
     GAME = 7
+    END_GAME = 87
 
     EXIT = 99
 
@@ -26,7 +31,8 @@ class Conf(object):
     debug_dict = {1: 'ALL', 2: 'MODEL', 3: 'VIEW',
                   4: 'CONTROLLER', 5: 'MENU',
                   6: 'OPTIONS', 7: 'GAME',
-                  99: 'EXIT', 41: 'SOUND'}
+                  99: 'EXIT', 41: 'SOUND',
+                  42: 'AI', 87: 'END_GAME'}
 
     # Board constants
     NON_PLAYABLE = -1
@@ -103,6 +109,12 @@ class Conf(object):
     B2_LOC = SCREEN_SIZE[0]/2, SCREEN_SIZE[1]/2
     B3_LOC = SCREEN_SIZE[0]/2, SCREEN_SIZE[1]/2 + 80
 
+    # Menu Options
+    B_OPT_1_0 = B1_LOC
+    DIAMOND = 1
+    B_OPT_1_1 = B2_LOC
+    CHINESE_CHECKERS = 2
+
     # @staticmethod
     # def loc_to_view(x, y):
     #     x_separation = (Conf.PIECE_WIDTH/Conf.AMOUNT_X)/4
@@ -120,10 +132,30 @@ class Conf(object):
     #     return new_x, new_y
 
     # Game options
-    DEFAULT_SIZE_PLAYER_BASE = 5
+    # DEFAULT_SIZE_PLAYER_BASE = 2
     NUM_PLAYERS = 6
     NUM_AI_PLAYERS = 0
+    WINNER = 0
 
+    AI_DIF = 200
+    BP1 = 201
+    BP2 = 202
+    BP3 = 203
+    BP4 = 204
+    BP5 = 205
+    BP6 = 206
+    BFIELDS = 207
+
+    OPT_OPTIONS = {BFIELDS: 5, AI_DIF: 1, BP1: 2, BP2: 2, BP3: 2,
+                   BP4: 0, BP5: 0, BP6: 0}
+
+    OPT_EASY = 0
+    OPT_MEDIUM = 1
+    OPT_NONE = 0
+    OPT_HUMAN = 1
+    OPT_AI = 2
+
+    GAME_CHOSEN = CHINESE_CHECKERS
 
 if __name__ == "__main__":
     raise Exception("Unexpected")

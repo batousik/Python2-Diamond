@@ -1,4 +1,6 @@
 import math
+import traceback
+from __builtin__ import isinstance
 import pygame
 from pygame.constants import DOUBLEBUF
 from pygame.sprite import DirtySprite, LayeredDirty
@@ -30,11 +32,14 @@ class MasterView(MVCObject):
         self.event_manager = ev_manager
         self.sub_classes = {Conf.MENU: [MenuView],
                             Conf.GAME: [GameView],
-                            Conf.OPTIONS: [OptionsView]}
+                            Conf.OPTIONS: [OptionsView],
+                            Conf.DIAMOND: [DiamondOptionsView],
+                            Conf.CHINESE_CHECKERS: [ChineseCheckersOptionsView],
+                            Conf.END_GAME: [DiamondOptionsView]}
 
         # perform some set up
         # window caption
-        pygame.display.set_caption("Chinese Checkers v 0.2")
+        pygame.display.set_caption("Chinese Checkers v 0.7")
         # screen = pygame.display.set_mode(size, FULLSCREEN)  # make window
         # make window and DOUBLEBUF for smooth animation
         self.screen = pygame.display.set_mode(Conf.SCREEN_SIZE, DOUBLEBUF)
@@ -53,45 +58,35 @@ class MasterView(MVCObject):
     def get_next_event(self):
         return self.event_manager.get_next_view_event()
 
-    # def switch_sub_modules(self, key):
-    #     self.sub_modules = []
-    #     for a_view in self.sub_classes[key]:
-    #         new_view = a_view(self.event_manager)
-    #         bg = new_view.get_image()
-    #         self.background.blit(bg, (0, 0))
-    #         self.sub_modules.append(new_view)
-    #     # initial blit & flip of the newly constructed background
-    #     self.screen.blit(self.background, (0, 0))
-    #     pygame.display.flip()
-
     # noinspection PyBroadException
     def run(self):
         running = 1
-        # try:
-        while running:
-            event = self.get_next_event
-            if isinstance(event, QuitEvent):
-                # Terminate view thread
-                print self.thread_name + ' is shutting down'
-                running = 0
-            elif isinstance(event, TickEvent):
-                # Update view according to FPS
-                for a_view in self.sub_modules:
-                    view_bg = a_view.get_image()
-                    self.background.blit(view_bg, (0, 0))
-                self.screen.blit(self.background, (0, 0))
-                pygame.display.flip()
-            elif isinstance(event, SwitchScreenEvent):
-                self.switch_sub_modules(event.value)
-            else:
-                for a_view in self.sub_modules:
-                    if a_view.does_handle_event(event):
-                        a_view.handle_event(event)
-        # except:
-        #     e = sys.exc_info()[0]
-        #     print '>>>>>>>>>>> Fatal Error in: ' + self.thread_name
-        #     print e
-        #     self.post(QuitEvent(), Conf.ALL)
+        try:
+            while running:
+                event = self.get_next_event
+                if isinstance(event, QuitEvent):
+                    # Terminate view thread
+                    print self.thread_name + ' is shutting down'
+                    running = 0
+                elif isinstance(event, TickEvent):
+                    # Update view according to FPS
+                    for a_view in self.sub_modules:
+                        view_bg = a_view.get_image()
+                        self.background.blit(view_bg, (0, 0))
+                    self.screen.blit(self.background, (0, 0))
+                    pygame.display.flip()
+                elif isinstance(event, SwitchScreenEvent):
+                    self.switch_sub_modules(event.value)
+                else:
+                    for a_view in self.sub_modules:
+                        if a_view.does_handle_event(event):
+                            a_view.handle_event(event)
+        except:
+            e = sys.exc_info()[0]
+            print '>>>>>>>>>>> Fatal Error in: ' + self.thread_name
+            print e
+            traceback.print_exc()
+            self.post(QuitEvent(), Conf.ALL)
 
 
 class MenuView(MVCView):
@@ -259,11 +254,115 @@ class GameView(MVCView):
 
 class OptionsView(MVCView):
     def __init__(self, ev_manager):
-        MVCView.__init__(self, ev_manager)
-        self.fields = []
-        self.pieces = []
-        # Load images
-        # Load sound
+        MVCView.__init__(self, ev_manager, '[view_options1]')
+        b1 = Button2(Conf.B_OPT_1_0, 'b_opt_1_0', Conf.DIAMOND)
+        b2 = Button2(Conf.B_OPT_1_1, 'b_opt_1_1', Conf.CHINESE_CHECKERS)
+        self.click_sprites = LayeredDirty()
+        self.click_sprites.add(b1)
+        self.click_sprites.add(b2)
+        self.sprite_group.add(b1)
+        self.sprite_group.add(b2)
+
+    def does_handle_event(self, event):
+        return 1
+
+    def handle_event(self, event):
+        if isinstance(event, MouseClickEvent):
+            for sprite in self.click_sprites:
+                if sprite.rect.collidepoint(event.position):
+                    Conf.GAME_CHOSEN = sprite.an_id
+                    self.post(OptionsClickEvent(sprite.an_id), Conf.MODEL)
+                    break
+
+
+class DiamondOptionsView(MVCView):
+    def __init__(self, ev_manager):
+        MVCView.__init__(self, ev_manager, '[view_options1]')
+        label1 = Label2((200 + 100 + 40, 200 + 100 + 10 - 100 + 15 + 11 + 3))
+        self.sprite_group.add(label1)
+        self.click_sprites = LayeredDirty()
+        imgs = [Utils.load_image('none'), Utils.load_image('human'), Utils.load_image('ai')]
+        b_ai = Button3((430 + 100 + 40, 75 + 100), [Utils.load_image('easy'),
+                       Utils.load_image('medium')],
+                       Conf.AI_DIF, Conf.OPT_OPTIONS.get(Conf.AI_DIF))
+        bp1 = Button3((430 + 100 + 40, 75 + 40 + 100), imgs, Conf.BP1, Conf.OPT_OPTIONS.get(Conf.BP1))
+        bp2 = Button3((430 + 100 + 40, 75 + 80 + 100), imgs, Conf.BP2, Conf.OPT_OPTIONS.get(Conf.BP2))
+        bp3 = Button3((430 + 100 + 40, 75 + 120 + 10 + 100 - 5), imgs, Conf.BP3, Conf.OPT_OPTIONS.get(Conf.BP3))
+        self.sprite_group.add(b_ai, bp1, bp2, bp3)
+        self.click_sprites.add(b_ai, bp1, bp2, bp3)
+
+    def does_handle_event(self, event):
+        return 1
+
+    def handle_event(self, event):
+        if isinstance(event, MouseClickEvent):
+            for sprite in self.click_sprites:
+                if sprite.rect.collidepoint(event.position):
+                    self.post(OptionsClickEvent(sprite.an_id), Conf.MODEL)
+        elif isinstance(event, OptionButtonStateChangeEvent):
+            for sprite in self.click_sprites:
+                if sprite.an_id == event.an_id:
+                    sprite.state = event.value
+                    break
+
+
+class ChineseCheckersOptionsView(MVCView):
+    def __init__(self, ev_manager):
+        MVCView.__init__(self, ev_manager, '[view_options1]')
+        label1 = Label((200 + 100 + 40, 200 + 100 + 10))
+        self.sprite_group.add(label1)
+        self.click_sprites = LayeredDirty()
+        imgs = [Utils.load_image('none'), Utils.load_image('human'), Utils.load_image('ai')]
+        b_ai = Button3((430 + 100 + 40, 75 + 100), [Utils.load_image('easy'),
+                       Utils.load_image('medium')],
+                       Conf.AI_DIF, Conf.OPT_OPTIONS.get(Conf.AI_DIF))
+        bp1 = Button3((430 + 100 + 40, 75 + 40 + 100), imgs, Conf.BP1, Conf.OPT_OPTIONS.get(Conf.BP1))
+        bp2 = Button3((430 + 100 + 40, 75 + 80 + 100), imgs, Conf.BP2, Conf.OPT_OPTIONS.get(Conf.BP2))
+        bp3 = Button3((430 + 100 + 40, 75 + 120 + 10 + 100 - 5), imgs, Conf.BP3, Conf.OPT_OPTIONS.get(Conf.BP3))
+        bp4 = Button3((430 + 100 + 40, 75 + 160 + 10 + 100 - 5), imgs, Conf.BP4, Conf.OPT_OPTIONS.get(Conf.BP4))
+        bp5 = Button3((430 + 100 + 40, 75 + 200 + 10 + 100 - 5), imgs, Conf.BP5, Conf.OPT_OPTIONS.get(Conf.BP5))
+        bp6 = Button3((430 + 100 + 40, 75 + 240 + 10 + 100 - 5), imgs, Conf.BP6, Conf.OPT_OPTIONS.get(Conf.BP6))
+        imgsx22 = [Utils.load_image('1'), Utils.load_image('2'), Utils.load_image('3'),
+                 Utils.load_image('4'), Utils.load_image('5'), Utils.load_image('6'),
+                 Utils.load_image('7'), Utils.load_image('8'), Utils.load_image('9'),
+                 Utils.load_image('10'), Utils.load_image('11'), Utils.load_image('12')]
+        bfields = Button3((430 + 100 + 40 + 5, 75 + 240 + 10 + 100 - 5 + 40), imgsx22, Conf.BFIELDS,
+                          Conf.OPT_OPTIONS.get(Conf.BFIELDS))
+        self.sprite_group.add(b_ai, bp1, bp2, bp3, bp4, bp5, bp6, bfields)
+        self.click_sprites.add(b_ai, bp1, bp2, bp3, bp4, bp5, bp6, bfields)
+
+    def does_handle_event(self, event):
+        return 1
+
+    def handle_event(self, event):
+        if isinstance(event, MouseClickEvent):
+            for sprite in self.click_sprites:
+                if sprite.rect.collidepoint(event.position):
+                    self.post(OptionsClickEvent(sprite.an_id), Conf.MODEL)
+        elif isinstance(event, OptionButtonStateChangeEvent):
+            for sprite in self.click_sprites:
+                if sprite.an_id == event.an_id:
+                    sprite.state = event.value
+                    break
+
+
+class EndGameView(MVCView):
+    def __init__(self, ev_manager):
+        MVCView.__init__(self, ev_manager, '[view_options1]')
+        b1 = Button2(Conf.B_OPT_1_0, 'b_opt_1_0', Conf.DIAMOND)
+        b2 = Button2(Conf.B_OPT_1_1, 'b_opt_1_1', Conf.CHINESE_CHECKERS)
+        self.sprite_group.add(b1)
+        self.sprite_group.add(b2)
+
+    def does_handle_event(self, event):
+        return 1
+
+    def handle_event(self, event):
+        if isinstance(event, MouseClickEvent):
+            for sprite in self.sprite_group:
+                if sprite.rect.collidepoint(event.position):
+                    self.post(OptionsClickEvent(sprite.an_id), Conf.MODEL)
+                    break
 
 
 class Piece(DirtySprite):
@@ -358,6 +457,49 @@ class Button(DirtySprite):
             self.image = self.imgs[1]
         else:
             self.image = self.imgs[0]
+
+
+class Button2(DirtySprite):
+    def __init__(self, loc, img, an_id):
+        DirtySprite.__init__(self)
+        self.image = Utils.load_image(img)
+        self.rect = self.image.get_rect()
+        self.rect.center = loc
+        self.dirty = 2
+        self.an_id = an_id
+
+
+class Button3(DirtySprite):
+    def __init__(self, loc, imgs, an_id, state):
+        DirtySprite.__init__(self)
+        self.imgs = imgs
+        self.state = state
+        self.image = imgs[self.state]
+        self.rect = self.image.get_rect()
+        self.rect.center = loc
+        self.dirty = 2
+        self.an_id = an_id
+
+    def update(self, *args):
+        self.image = self.imgs[self.state]
+
+
+class Label(DirtySprite):
+    def __init__(self, loc):
+        DirtySprite.__init__(self)
+        self.image = Utils.load_image('label')
+        self.rect = self.image.get_rect()
+        self.rect.center = loc
+        self.dirty = 2
+
+
+class Label2(DirtySprite):
+    def __init__(self, loc):
+        DirtySprite.__init__(self)
+        self.image = Utils.load_image('label2')
+        self.rect = self.image.get_rect()
+        self.rect.center = loc
+        self.dirty = 2
 
 
 class BackGround(DirtySprite):

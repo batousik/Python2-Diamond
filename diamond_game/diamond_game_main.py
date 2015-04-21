@@ -18,21 +18,24 @@ def main():
     # M-V-C Framework events
     event_manager = EventManager()
 
+    ai_thread = AI(event_manager)
     controller_thread = MasterController(event_manager)
     view_thread = MasterView(event_manager)
     model_thread = MasterModel(event_manager)
     sound_view_thread = SoundView(event_manager)
 
+    ai_thread.start()
     model_thread.start()
     controller_thread.start()
     sound_view_thread.start()
     view_thread.start()
 
     # The main game loop :)
-    while controller_thread.is_alive() or view_thread.is_alive() \
-            or model_thread.is_alive() or sound_view_thread.is_alive():
+
+    while controller_thread.is_alive():
         time.sleep(0.03)  # ~33 FPS
         event_manager.post(TickEvent(), Conf.VIEW)
+        event_manager.post(TickEvent(), Conf.MODEL)
         pygame.event.pump()  # keeps pygame modules going
 
     # Has to be last line printed out

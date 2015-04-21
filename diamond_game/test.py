@@ -37,6 +37,7 @@ a.put(1)
 a.put(1)
 a.put(1)
 
+
 def geta():
     if not a.empty():
         return a.get()
@@ -62,4 +63,7 @@ if __name__ == "__main__":
         event = geta()
 
     print 5/2
+    li = [1,2,3,4]
+    print li[234231]
+    li = []
     # main()

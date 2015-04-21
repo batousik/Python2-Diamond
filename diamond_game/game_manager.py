@@ -151,6 +151,32 @@ class SoundPlayEvent(Event):
         self.sound_name = sound_name
 
 
+class AIMakeMoveEvent(Event):
+    def __init__(self, data):
+        Event.__init__(self, "AiMakeMoveEvent: " + str(data))
+        self.data = data
+
+
+class AIMovedEvent(Event):
+    def __init__(self, data):
+        Event.__init__(self, "AIMovedEvent: " + str(data))
+        self.data = data
+
+
+class OptionsClickEvent(Event):
+    def __init__(self, val):
+        Event.__init__(self, "OptionsClick: " + str(val))
+        self.value = val
+
+
+class OptionButtonStateChangeEvent(Event):
+    def __init__(self, an_id, val):
+        Event.__init__(self, "OptionButtonStateChange: " + str(val))
+        self.an_id = an_id
+        self.value = val
+
+
+
 class EventManager(object):
     """Class to manage all of the events generated in the Game"""
     def __init__(self):
@@ -160,6 +186,7 @@ class EventManager(object):
         self.view_event_queue = Queue.Queue(0)
         self.controller_event_queue = Queue.Queue(0)
         self.sound_event_queue = Queue.Queue(0)
+        self.ai_event_queue = Queue.Queue(0)
         # locks to queue access
         self.model_locked = 0
         self.view_locked = 0
@@ -177,6 +204,7 @@ class EventManager(object):
             self.model_event_queue.put(event)
             self.controller_event_queue.put(event)
             self.sound_event_queue.put(event)
+            self.ai_event_queue.put(event)
         elif destination == Conf.MODEL:
             if not self.model_locked:
                 self.model_event_queue.put(event)
@@ -188,6 +216,8 @@ class EventManager(object):
                 self.controller_event_queue.put(event)
         elif destination == Conf.SOUND:
                 self.sound_event_queue.put(event)
+        elif destination == Conf.AI:
+                self.ai_event_queue.put(event)
         if Conf.DEBUG:
             self.debug(event, destination)
 
@@ -235,6 +265,14 @@ class EventManager(object):
         """
         if not self.sound_event_queue.empty():
             return self.sound_event_queue.get()
+
+    def get_next_ai_event(self):
+        """
+        :return:
+        :rtype : Event
+        """
+        if not self.ai_event_queue.empty():
+            return self.ai_event_queue.get()
 
     @staticmethod
     def debug(event, destination):

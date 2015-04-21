@@ -1,3 +1,4 @@
+import traceback
 import pygame
 from pygame.constants import *
 import sys
@@ -10,7 +11,10 @@ class MasterController(MVCObject):
         self.id = Conf.CONTROLLER
         self.sub_classes = {Conf.MENU: [MenuController],
                             Conf.GAME: [GameController],
-                            Conf.OPTIONS: [OptionsController]}
+                            Conf.OPTIONS: [OptionsController],
+                            Conf.CHINESE_CHECKERS: [ChineseCheckersOptionsController],
+                            Conf.DIAMOND: [DiamondOptionsController],
+                            Conf.END_GAME: [EndGameController]}
         self.switch_sub_modules(Conf.MENU)
 
     @property
@@ -52,6 +56,7 @@ class MasterController(MVCObject):
             e = sys.exc_info()[0]
             print '>>>>>>>>>>> Fatal Error in: ' + self.thread_name
             print e
+            traceback.print_exc()
             self.post(QuitEvent(), Conf.ALL)
 
 
@@ -102,7 +107,7 @@ class GameController(MVCObject):
 
 class OptionsController(MVCObject):
     def __init__(self, ev_manager):
-        MVCObject.__init__(self, ev_manager)
+        MVCObject.__init__(self, ev_manager, '[model_options_1]')
 
     def does_handle_event(self, event):
         if event.type == KEYDOWN or event.type == MOUSEBUTTONDOWN or event.type == MOUSEMOTION:
@@ -112,21 +117,76 @@ class OptionsController(MVCObject):
     def handle_py_game_event(self, event):
         cur_event = None
         if event.type == KEYDOWN and event.key == K_ESCAPE:
-            cur_event = QuitEvent()
-        elif event.type == KEYDOWN and event.key == K_UP:
-            cur_event = MenuPrevEvent()
-        elif event.type == KEYDOWN and event.key == K_DOWN:
-            cur_event = MenuNextEvent()
-        elif event.type == KEYDOWN and (event.key == K_RETURN or event.key == K_SPACE):
-            cur_event = MenuPressEvent()
+            cur_event = SwitchScreenEvent(Conf.MENU)
+            self.event_manager.post(cur_event, Conf.ALL)
         elif event.type == MOUSEBUTTONDOWN:
             button = event.button
             if button == 1:
                 cur_event = MouseClickEvent(event.pos)
-        elif event.type == MOUSEMOTION:
-            cur_event = MouseMotionEvent(event.pos)
-        if cur_event:
-            self.event_manager.post(cur_event)
+                self.event_manager.post(cur_event, Conf.VIEW)
+
+
+class ChineseCheckersOptionsController(MVCObject):
+    def __init__(self, ev_manager):
+        MVCObject.__init__(self, ev_manager, '[contr_options_cc]')
+
+    def does_handle_event(self, event):
+        if event.type == KEYDOWN or event.type == MOUSEBUTTONDOWN or event.type == MOUSEMOTION:
+            return 1
+        return 0
+
+    def handle_py_game_event(self, event):
+        cur_event = None
+        if event.type == KEYDOWN and event.key == K_ESCAPE:
+            cur_event = SwitchScreenEvent(Conf.MENU)
+            self.event_manager.post(cur_event, Conf.ALL)
+        elif event.type == MOUSEBUTTONDOWN:
+            button = event.button
+            if button == 1:
+                cur_event = MouseClickEvent(event.pos)
+                self.event_manager.post(cur_event, Conf.VIEW)
+
+
+class DiamondOptionsController(MVCObject):
+    def __init__(self, ev_manager):
+        MVCObject.__init__(self, ev_manager, '[contr_options_d]')
+
+    def does_handle_event(self, event):
+        if event.type == KEYDOWN or event.type == MOUSEBUTTONDOWN or event.type == MOUSEMOTION:
+            return 1
+        return 0
+
+    def handle_py_game_event(self, event):
+        cur_event = None
+        if event.type == KEYDOWN and event.key == K_ESCAPE:
+            cur_event = SwitchScreenEvent(Conf.MENU)
+            self.event_manager.post(cur_event, Conf.ALL)
+        elif event.type == MOUSEBUTTONDOWN:
+            button = event.button
+            if button == 1:
+                cur_event = MouseClickEvent(event.pos)
+                self.event_manager.post(cur_event, Conf.VIEW)
+
+
+class EndGameController(MVCObject):
+    def __init__(self, ev_manager):
+        MVCObject.__init__(self, ev_manager, '[contr_options_d]')
+
+    def does_handle_event(self, event):
+        if event.type == KEYDOWN or event.type == MOUSEBUTTONDOWN or event.type == MOUSEMOTION:
+            return 1
+        return 0
+
+    def handle_py_game_event(self, event):
+        cur_event = None
+        if event.type == KEYDOWN and event.key == K_ESCAPE:
+            cur_event = SwitchScreenEvent(Conf.MENU)
+            self.event_manager.post(cur_event, Conf.ALL)
+        elif event.type == MOUSEBUTTONDOWN:
+            button = event.button
+            if button == 1:
+                cur_event = MouseClickEvent(event.pos)
+                self.event_manager.post(cur_event, Conf.VIEW)
 
 
 class KeyboardController:
