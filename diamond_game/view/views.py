@@ -36,11 +36,11 @@ class MasterView(MVCObject):
                             Conf.OPTIONS: [OptionsView],
                             Conf.DIAMOND: [DiamondOptionsView],
                             Conf.CHINESE_CHECKERS: [ChineseCheckersOptionsView],
-                            Conf.END_GAME: [DiamondOptionsView]}
+                            Conf.END_GAME: [EndGameView]}
 
         # perform some set up
         # window caption
-        pygame.display.set_caption("Chinese Checkers v 0.7")
+        pygame.display.set_caption("Chinese Checkers v 0.9")
         # screen = pygame.display.set_mode(size, FULLSCREEN)  # make window
         # make window and DOUBLEBUF for smooth animation
         self.screen = pygame.display.set_mode(Conf.SCREEN_SIZE, DOUBLEBUF)
@@ -350,13 +350,13 @@ class ChineseCheckersOptionsView(MVCView):
 class EndGameView(MVCView):
     def __init__(self, ev_manager):
         MVCView.__init__(self, ev_manager, '[view_options1]')
-        b1 = Button2(Conf.B_OPT_1_0, 'b_opt_1_0', Conf.DIAMOND)
-        b2 = Button2(Conf.B_OPT_1_1, 'b_opt_1_1', Conf.CHINESE_CHECKERS)
-        self.sprite_group.add(b1)
-        self.sprite_group.add(b2)
+        l1 = Label3((200, 300), 'player')
+        l2 = Label3((350, 300), str(Conf.WINNER))
+        l3 = Label3((480, 300), 'won')
+        self.sprite_group.add(l1, l2, l3)
 
     def does_handle_event(self, event):
-        return 1
+        return 0
 
     def handle_event(self, event):
         if isinstance(event, MouseClickEvent):
@@ -501,6 +501,16 @@ class Label2(DirtySprite):
         self.rect = self.image.get_rect()
         self.rect.center = loc
         self.dirty = 2
+
+
+class Label3(DirtySprite):
+    def __init__(self, loc, img):
+        DirtySprite.__init__(self)
+        self.image = Utils.load_image(img)
+        self.rect = self.image.get_rect()
+        self.rect.center = loc
+        self.dirty = 2
+
 
 
 class BackGround(DirtySprite):

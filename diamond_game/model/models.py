@@ -89,7 +89,10 @@ class MenuModel(MVCObject):
                 if Conf.GAME_CHOSEN == Conf.CHINESE_CHECKERS:
                     self.post(SwitchScreenEvent(self.data[self.chosen]), Conf.ALL)
                 elif Conf.GAME_CHOSEN == Conf.DIAMOND:
-                    self.post(SwitchScreenEvent(Conf.GAME2), Conf.ALL)
+                    if self.data[self.chosen] == 0:
+                        self.post(SwitchScreenEvent(Conf.GAME2), Conf.ALL)
+                    else:
+                        self.post(SwitchScreenEvent(self.data[self.chosen]), Conf.ALL)
 
 
 class GameModel(MVCObject):
@@ -379,7 +382,7 @@ class GameModel(MVCObject):
             self.current_player_index += 1
             if self.current_player_index == len(self.players):
                 self.current_player_index = 0
-            self.current_player = self.ai_players[self.current_player_index]
+            self.current_player = self.players[self.current_player_index]
 
     def is_ai_player(self, player):
         if self.ai_players.__contains__(player):
@@ -712,7 +715,7 @@ class DiamondGameModel(MVCObject):
             self.current_player_index += 1
             if self.current_player_index == len(self.players):
                 self.current_player_index = 0
-            self.current_player = self.ai_players[self.current_player_index]
+            self.current_player = self.players[self.current_player_index]
 
     def is_ai_player(self, player):
         if self.ai_players.__contains__(player):
@@ -810,7 +813,7 @@ class EndGameModel(MVCObject):
         MVCObject.__init__(self, ev_manager, '[model_options1]')
 
     def does_handle_event(self, event):
-        return 1
+        return 0
 
     def handle_event(self, event):
         if isinstance(event, OptionsClickEvent):
