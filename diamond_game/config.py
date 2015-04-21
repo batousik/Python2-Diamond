@@ -18,6 +18,7 @@ class Conf(object):
     MENU = 5
     OPTIONS = 6
     GAME = 7
+    GAME2 = 1024
     END_GAME = 87
 
     EXIT = 99
@@ -32,7 +33,8 @@ class Conf(object):
                   4: 'CONTROLLER', 5: 'MENU',
                   6: 'OPTIONS', 7: 'GAME',
                   99: 'EXIT', 41: 'SOUND',
-                  42: 'AI', 87: 'END_GAME'}
+                  42: 'AI', 87: 'END_GAME',
+                  1024: 'GAMEDIAMOND'}
 
     # Board constants
     NON_PLAYABLE = -1

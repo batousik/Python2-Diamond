@@ -9,6 +9,7 @@ class MasterModel(MVCObject):
         self.id = Conf.MODEL
         self.sub_classes = {Conf.MENU: [MenuModel],
                             Conf.GAME: [GameModel],
+                            Conf.GAME2: [DiamondGameModel],
                             Conf.OPTIONS: [OptionsModel],
                             Conf.DIAMOND: [DOptionsModel],
                             Conf.CHINESE_CHECKERS: [CCOptionsModel],
@@ -88,7 +89,7 @@ class MenuModel(MVCObject):
                 if Conf.GAME_CHOSEN == Conf.CHINESE_CHECKERS:
                     self.post(SwitchScreenEvent(self.data[self.chosen]), Conf.ALL)
                 elif Conf.GAME_CHOSEN == Conf.DIAMOND:
-                    self.post(SwitchScreenEvent('diamond'), Conf.ALL)
+                    self.post(SwitchScreenEvent(Conf.GAME2), Conf.ALL)
 
 
 class GameModel(MVCObject):
@@ -96,7 +97,7 @@ class GameModel(MVCObject):
         MVCObject.__init__(self, ev_manager, '[GameModel]')
         self.ready = 0
         self.current_player = Conf.EMPTY
-        self.size_player_triangle_base = Conf.OPT_OPTIONS.get(Conf.BFIELDS)
+        self.size_player_triangle_base = Conf.OPT_OPTIONS.get(Conf.BFIELDS) + 1
         self.board = Board(self.size_player_triangle_base)
         self.number_of_players = 0
         self.current_player_index = 0
@@ -428,24 +429,24 @@ class DiamondGameModel(MVCObject):
         MVCObject.__init__(self, ev_manager, '[GameModel]')
         self.ready = 0
         self.current_player = Conf.EMPTY
-        self.size_player_triangle_base = Conf.OPT_OPTIONS.get(Conf.BFIELDS)
-        self.board = DiamondBoard(self.size_player_triangle_base)
+        self.size_player_triangle_base = 3
+        self.board = DiamondBoard()
         self.number_of_players = 0
+        self.current_player_index = 0
         self.players = []
         self.ai_players = []
         i = 1
         for key, value in Conf.OPT_OPTIONS.iteritems():
-            if not key == Conf.AI_DIF and not key == Conf.BFIELDS:
+            if not key == Conf.AI_DIF and not key == Conf.BFIELDS\
+                    and not key == Conf.BP4 and not key == Conf.BP5 and not key == Conf.BP6:
                 if value > Conf.OPT_NONE:
                     self.number_of_players += 1
                     if value == Conf.OPT_AI:
                         self.ai_players.append(i)
-                    elif value == Conf.OPT_HUMAN:
-                        self.players.append(i)
-
+                    self.players.append(i)
                 i += 1
         self.set_ai_at_random()
-        self.current_player = Conf.P1
+        self.current_player = self.players[self.current_player_index]
         self.piece_selected = 0
         self.piece_selected_loc = (-1, -1)
         self.available_locations = []
@@ -463,8 +464,8 @@ class DiamondGameModel(MVCObject):
         # Whenever View is ready provide pieces and board
         if isinstance(event, SubModulesLoadedEvent):
             # initiate the GAME
-            if event.module == Conf.VIEW and event.sub_module == Conf.GAME:
-                self.board = Board(self.size_player_triangle_base)
+            if event.module == Conf.VIEW and event.sub_module == Conf.GAME2:
+                self.board = DiamondBoard()
                 self.post(BoardCreatedEvent(self.get_board_grid(), self.get_grid_dimensions()), Conf.VIEW)
                 self.board.init_board(self.number_of_players)
                 self.post(PiecesCreatedEvent(self.get_pieces()), Conf.VIEW)
@@ -693,6 +694,7 @@ class DiamondGameModel(MVCObject):
         self.deselect_piece(self.piece_selected_loc)
         # Order view to update
         self.post(PieceMoveEvent(uid, loc), Conf.VIEW)
+        # TODO: CHECK WIN?
         # Update current player
         self.next_player()
 
@@ -707,10 +709,10 @@ class DiamondGameModel(MVCObject):
             Conf.WINNER = self.current_player
             self.post(SwitchScreenEvent(Conf.END_GAME), Conf.ALL)
         else:
-            if self.current_player < self.number_of_players:
-                self.current_player += 1
-            else:
-                self.current_player = 1
+            self.current_player_index += 1
+            if self.current_player_index == len(self.players):
+                self.current_player_index = 0
+            self.current_player = self.ai_players[self.current_player_index]
 
     def is_ai_player(self, player):
         if self.ai_players.__contains__(player):
@@ -753,7 +755,6 @@ class DiamondGameModel(MVCObject):
             if self.board.get_field(loc).value != player:
                 return 0
         return 1
-
 
 class OptionsModel(MVCObject):
     def __init__(self, ev_manager):
@@ -819,13 +820,30 @@ class EndGameModel(MVCObject):
 class DOptionsModel(MVCObject):
     def __init__(self, ev_manager):
         MVCObject.__init__(self, ev_manager, '[model_options1]')
+        self.options = {Conf.AI_DIF: [Conf.OPT_EASY, Conf.OPT_MEDIUM],
+                        Conf.BP1: [Conf.OPT_NONE, Conf.OPT_HUMAN, Conf.OPT_AI],
+                        Conf.BP2: [Conf.OPT_NONE, Conf.OPT_HUMAN, Conf.OPT_AI],
+                        Conf.BP3: [Conf.OPT_NONE, Conf.OPT_HUMAN, Conf.OPT_AI]}
+
+        self.selected_options = {Conf.AI_DIF: Conf.OPT_OPTIONS.get(Conf.AI_DIF),
+                                 Conf.BP1: Conf.OPT_OPTIONS.get(Conf.BP1),
+                                 Conf.BP2: Conf.OPT_OPTIONS.get(Conf.BP2),
+                                 Conf.BP3: Conf.OPT_OPTIONS.get(Conf.BP3)}
 
     def does_handle_event(self, event):
         return 1
 
     def handle_event(self, event):
         if isinstance(event, OptionsClickEvent):
-            self.post(SwitchScreenEvent(event.value), Conf.ALL)
+            id = event.value
+            a = self.selected_options.get(id)
+            lst = self.options.get(id)
+            if len(lst) == a+1:
+                self.selected_options[id] = 0
+            else:
+                self.selected_options[id] = a+1
+            Conf.OPT_OPTIONS[id] = self.selected_options[id]
+            self.post(OptionButtonStateChangeEvent(id, self.selected_options[id]), Conf.VIEW)
 
 
 class Board(object):
@@ -956,6 +974,33 @@ class Board(object):
             print line
             line = ''
 
+        ba1 = []
+        ba2 = []
+        ba3 = []
+        ba4 = []
+        ba5 = []
+        ba6 = []
+        for y in range(self.SIZE_BOARD_Y_GRID):
+            for x in range(self.SIZE_BOARD_X_GRID):
+                if self.board[y][x].value == 1:
+                    ba1.append((x, y))
+                elif self.board[y][x].value == 2:
+                    ba2.append((x, y))
+                elif self.board[y][x].value == 3:
+                    ba3.append((x, y))
+                elif self.board[y][x].value == 4:
+                    ba4.append((x, y))
+                elif self.board[y][x].value == 5:
+                    ba5.append((x, y))
+                elif self.board[y][x].value == 6:
+                    ba6.append((x, y))
+        print ba1
+        print ba2
+        print ba3
+        print ba4
+        print ba5
+        print ba6
+
 
 class DiamondBoard(object):
     """
@@ -969,8 +1014,8 @@ class DiamondBoard(object):
     """
 
     # creates empty board
-    def __init__(self, size_player_base=4):
-        self.SIZE_PLAYER_BASE = size_player_base
+    def __init__(self):
+        self.SIZE_PLAYER_BASE = 3
         self.SIZE_PLAYER_BASE_GRID = (self.SIZE_PLAYER_BASE * 2) - 1
         self.SIZE_BOARD_CENTER = self.SIZE_PLAYER_BASE + 1
         self.SIZE_TRIANGLE_BASE = (self.SIZE_PLAYER_BASE * 3) + 1
@@ -1028,43 +1073,33 @@ class DiamondBoard(object):
     # initiates created board with player pieces
     def init_board(self, num_players=3):
         self.make_board()
-        players = [Conf.P1, Conf.P2, Conf.P3]
-        for index in range(len(players)):
-            if players[index] > num_players:
-                players[index] = Conf.EMPTY
-        i = self.SIZE_PLAYER_BASE_GRID
-        for y in range(self.SIZE_BOARD_Y_GRID):
-            row = self.board[y]
-            if y/self.SIZE_PLAYER_BASE == 0:
-                for x in range(self.SIZE_BOARD_X_GRID):
-                    if row[x].value == 0:
-                        row[x] = Piece(players[0])
-                        self.win_sectors.get(Conf.P2).append((x, y))
-            elif y/self.SIZE_PLAYER_BASE == 1:
-                for x in range(self.SIZE_BOARD_X_GRID):
-                    if row[x].value == 0:
-                        if x < i:
-                            row[x] = Piece(players[1])
-                            self.win_sectors.get(Conf.P4).append((x, y))
-                        elif x + i >= self.SIZE_BOARD_X_GRID:
-                            row[x] = Piece(players[2])
-                            self.win_sectors.get(Conf.P5).append((x, y))
-                i -= 1
-            elif (y-1)/self.SIZE_PLAYER_BASE == 2:
-                i += 1
-                for x in range(self.SIZE_BOARD_X_GRID):
-                    if row[x].value == 0:
-                        if x < i:
-                            row[x] = Piece(players[3])
-                            self.win_sectors.get(Conf.P6).append((x, y))
-                        elif x + i >= self.SIZE_BOARD_X_GRID:
-                            row[x] = Piece(players[4])
-                            self.win_sectors.get(Conf.P3).append((x, y))
-            elif (y-1)/self.SIZE_PLAYER_BASE == 3:
-                for x in range(self.SIZE_BOARD_X_GRID):
-                    if row[x].value == 0:
-                        row[x] = Piece(players[5])
-                        self.win_sectors.get(Conf.P1).append((x, y))
+        a1 = 1 if Conf.OPT_OPTIONS.get(Conf.BP1) > 0 else 0
+        a2 = 2 if Conf.OPT_OPTIONS.get(Conf.BP2) > 0 else 0
+        a3 = 3 if Conf.OPT_OPTIONS.get(Conf.BP3) > 0 else 0
+
+        p1 = [(9, 0), (8, 1), (10, 1), (7, 2), (9, 2), (11, 2), (6, 3), (8, 3), (10, 3), (12,3)]
+        p1_win = [(6, 9), (8, 9), (10, 9), (12,9), (7, 10), (9, 10), (11, 10), (8, 11), (10, 11), (9, 12)]
+
+
+        p3_win = [(0, 3), (2, 3), (4, 3), (6, 3), (1, 4), (3, 4), (5, 4), (2, 5), (4, 5), (3, 6)]
+        p3 = [(15, 6), (14, 7), (16, 7), (13, 8), (15, 8), (17, 8), (12, 9), (14, 9), (16, 9), (18, 9)]
+
+        p2 = [(3, 6), (2, 7), (4, 7), (1, 8), (3, 8), (5, 8), (0, 9), (2, 9), (4, 9), (6, 9)]
+        p2_win = [(12, 3), (14, 3), (16, 3), (18, 3), (13, 4), (15, 4), (17, 4), (14, 5), (16, 5), (15, 6)]
+
+        if a1 == 1:
+            for loc in p1:
+                self.board[loc[1]][loc[0]] = Piece(1)
+            self.win_sectors[1] = p1_win
+        if a2 == 2:
+            for loc in p2:
+                self.board[loc[1]][loc[0]] = Piece(2)
+            self.win_sectors[2] = p2_win
+        if a3 == 3:
+            for loc in p3:
+                self.board[loc[1]][loc[0]] = Piece(3)
+            self.win_sectors[3] = p3_win
+
         if Conf.DEBUG:
             self.print_board()
 
@@ -1081,6 +1116,33 @@ class DiamondBoard(object):
                     line += str(self.board[y][x].value)
             print line
             line = ''
+
+        ba1 = []
+        ba2 = []
+        ba3 = []
+        ba4 = []
+        ba5 = []
+        ba6 = []
+        for y in range(self.SIZE_BOARD_Y_GRID):
+            for x in range(self.SIZE_BOARD_X_GRID):
+                if self.board[y][x].value == 1:
+                    ba1.append((x, y))
+                elif self.board[y][x].value == 2:
+                    ba2.append((x, y))
+                elif self.board[y][x].value == 3:
+                    ba3.append((x, y))
+                elif self.board[y][x].value == 4:
+                    ba4.append((x, y))
+                elif self.board[y][x].value == 5:
+                    ba5.append((x, y))
+                elif self.board[y][x].value == 6:
+                    ba6.append((x, y))
+        print ba1
+        print ba2
+        print ba3
+        print ba4
+        print ba5
+        print ba6
 
 
 class Piece(object):

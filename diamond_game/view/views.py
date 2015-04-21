@@ -32,6 +32,7 @@ class MasterView(MVCObject):
         self.event_manager = ev_manager
         self.sub_classes = {Conf.MENU: [MenuView],
                             Conf.GAME: [GameView],
+                            Conf.GAME2: [GameView],
                             Conf.OPTIONS: [OptionsView],
                             Conf.DIAMOND: [DiamondOptionsView],
                             Conf.CHINESE_CHECKERS: [ChineseCheckersOptionsView],

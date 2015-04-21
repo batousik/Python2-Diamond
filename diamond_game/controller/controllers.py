@@ -11,6 +11,7 @@ class MasterController(MVCObject):
         self.id = Conf.CONTROLLER
         self.sub_classes = {Conf.MENU: [MenuController],
                             Conf.GAME: [GameController],
+                            Conf.GAME2: [GameController],
                             Conf.OPTIONS: [OptionsController],
                             Conf.CHINESE_CHECKERS: [ChineseCheckersOptionsController],
                             Conf.DIAMOND: [DiamondOptionsController],
