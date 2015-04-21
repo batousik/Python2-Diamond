@@ -61,4 +61,5 @@ if __name__ == "__main__":
         print event
         event = geta()
 
+    print 5/2
     # main()

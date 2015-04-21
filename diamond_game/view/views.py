@@ -1,3 +1,4 @@
+import math
 import pygame
 from pygame.constants import DOUBLEBUF
 from pygame.sprite import DirtySprite, LayeredDirty
@@ -66,31 +67,31 @@ class MasterView(MVCObject):
     # noinspection PyBroadException
     def run(self):
         running = 1
-        try:
-            while running:
-                event = self.get_next_event
-                if isinstance(event, QuitEvent):
-                    # Terminate view thread
-                    print self.thread_name + ' is shutting down'
-                    running = 0
-                elif isinstance(event, TickEvent):
-                    # Update view according to FPS
-                    for a_view in self.sub_modules:
-                        view_bg = a_view.get_image()
-                        self.background.blit(view_bg, (0, 0))
-                    self.screen.blit(self.background, (0, 0))
-                    pygame.display.flip()
-                elif isinstance(event, SwitchScreenEvent):
-                    self.switch_sub_modules(event.value)
-                else:
-                    for a_view in self.sub_modules:
-                        if a_view.does_handle_event(event):
-                            a_view.handle_event(event)
-        except:
-            e = sys.exc_info()[0]
-            print '>>>>>>>>>>> Fatal Error in: ' + self.thread_name
-            print e
-            self.post(QuitEvent(), Conf.ALL)
+        # try:
+        while running:
+            event = self.get_next_event
+            if isinstance(event, QuitEvent):
+                # Terminate view thread
+                print self.thread_name + ' is shutting down'
+                running = 0
+            elif isinstance(event, TickEvent):
+                # Update view according to FPS
+                for a_view in self.sub_modules:
+                    view_bg = a_view.get_image()
+                    self.background.blit(view_bg, (0, 0))
+                self.screen.blit(self.background, (0, 0))
+                pygame.display.flip()
+            elif isinstance(event, SwitchScreenEvent):
+                self.switch_sub_modules(event.value)
+            else:
+                for a_view in self.sub_modules:
+                    if a_view.does_handle_event(event):
+                        a_view.handle_event(event)
+        # except:
+        #     e = sys.exc_info()[0]
+        #     print '>>>>>>>>>>> Fatal Error in: ' + self.thread_name
+        #     print e
+        #     self.post(QuitEvent(), Conf.ALL)
 
 
 class MenuView(MVCView):
@@ -129,12 +130,23 @@ class GameView(MVCView):
         MVCView.__init__(self, ev_manager, '[GameView]')
         self.fields_start_locs = []
         self.pieces_start_locs = []
+        self.board_sprite = BoardSprite()
+        self.sprite_group.add(self.board_sprite)
         # list of pieces sprites
         self.pieces = []
         self.fields = []
         self.click_sprites = LayeredDirty()
+        self.board_rad = 380
+        self.pieces_width = 2 * self.board_rad * math.cos(math.pi/3)
+        self.amount_x = 10
+        self.x_separation = 10
+        self.y_separation = 10
+        self.piece_rad = 10
+        self.piece_size = 10
+        self.board_x_offset = 10
+        self.board_y_offset = 10
+        self.center = (10, 10)
         # Load images
-        # Load sound
 
     def does_handle_event(self, event):
         return 1
@@ -142,6 +154,7 @@ class GameView(MVCView):
     def handle_event(self, event):
         if isinstance(event, BoardCreatedEvent):
             self.fields_start_locs = event.value
+            self.do_view_calc(event.dimention)
             self.create_board()
         elif isinstance(event, PiecesCreatedEvent):
             self.pieces_start_locs = event.value
@@ -163,9 +176,8 @@ class GameView(MVCView):
         elif isinstance(event, MouseClickEvent):
             for sprite in self.click_sprites:
                 if sprite.rect.collidepoint(event.position):
-                    x, y = (event.position[0], event.position[1])
                     self.post(
-                        GameObjectClickEvent(Conf.GAME_PLAY, Conf.loc_to_model(x, y)),
+                        GameObjectClickEvent(Conf.GAME_PLAY, self.loc_to_model(sprite.rect.center)),
                         Conf.MODEL)
                     break
 
@@ -175,8 +187,8 @@ class GameView(MVCView):
         from list of received locations
         """
         for field in self.fields_start_locs:
-            loc = Conf.loc_to_view(field[0], field[1])
-            new_field = Field(Conf.EMPTY, loc)
+            loc = self.loc_to_view(field[0], field[1])
+            new_field = Field(loc, self.piece_size)
             self.sprite_group.add(new_field)
             self.click_sprites.add(new_field)
             self.fields.append(new_field)
@@ -184,15 +196,15 @@ class GameView(MVCView):
     def create_pieces(self):
         self.pieces = []
         for piece in self.pieces_start_locs:
-            loc = Conf.loc_to_view(piece['x'], piece['y'])
-            new_piece = Piece(piece['piece'], loc)
+            loc = self.loc_to_view(piece['x'], piece['y'])
+            new_piece = Piece(piece['piece'], loc, self.piece_size)
             self.click_sprites.add(new_piece)
             self.sprite_group.add(new_piece)
             self.pieces.append(new_piece)
 
     def move_piece(self, uid, end):
         piece = self.get_piece_by_uid(uid)
-        piece.set_new_loc(end)
+        piece.set_new_loc(self.loc_to_view(end[0], end[1]))
 
     def get_piece_by_uid(self, uid):
         """Retrieves pieces sprite object from the list by uid.
@@ -203,7 +215,7 @@ class GameView(MVCView):
                 return piece
 
     def get_piece(self, loc):
-        view_loc = Conf.loc_to_view(loc[0], loc[1])
+        view_loc = self.loc_to_view(loc[0], loc[1])
         for piece in self.pieces:
             if piece.is_collided(view_loc):
                 return piece
@@ -219,10 +231,30 @@ class GameView(MVCView):
 
     def set_available_locs(self, locs, val):
         for loc in locs:
-            view_loc = Conf.loc_to_view(loc[0], loc[1])
+            view_loc = self.loc_to_view(loc[0], loc[1])
             for field in self.fields:
                 if field.is_collided(view_loc):
                     field.highlighted = val
+
+    def do_view_calc(self, dimention):
+        self.center = (dimention[0]/2, dimention[1]/2)
+        self.amount_x = dimention[0]
+        self.x_separation = int(self.pieces_width/self.amount_x)
+        self.y_separation = int(math.sin(math.pi/3) * self.x_separation)
+        self.piece_rad = self.x_separation / 2
+        self.piece_size = self.x_separation
+        # self.board_x_offset = self.piece_rad + Conf.BOARD_CENTER[0] - self.pieces_width/2
+        # self.board_y_offset = self.piece_rad + 40
+
+    def loc_to_view(self, x, y):
+        new_x = Conf.BOARD_REAL_CENTER[0] + (x-self.center[0]) * self.piece_size
+        new_y = Conf.BOARD_REAL_CENTER[1] + (y-self.center[1]) * (self.piece_size + self.y_separation)
+        return new_x, new_y
+
+    def loc_to_model(self, loc):
+        new_x = (loc[0] - Conf.BOARD_REAL_CENTER[0]) / self.piece_size + self.center[0]
+        new_y = (loc[1] - Conf.BOARD_REAL_CENTER[1]) / (self.piece_size + self.y_separation) + self.center[1]
+        return int(new_x), int(new_y)
 
 
 class OptionsView(MVCView):
@@ -235,10 +267,14 @@ class OptionsView(MVCView):
 
 
 class Piece(DirtySprite):
-    def __init__(self, a_piece, loc):
+    def __init__(self, a_piece, loc, size):
         DirtySprite.__init__(self)
-        self.image = pygame.Surface([Conf.PIECE_SIZE, Conf.PIECE_SIZE])
-        self.image.fill(Conf.COLOURS[a_piece.value])
+        player = 'p' + str(a_piece.value)
+        self.images = [Utils.load_image(player),
+                       Utils.load_image(player + '_s')]
+        self.images[0] = pygame.transform.scale(self.images[0], (size, size))
+        self.images[1] = pygame.transform.scale(self.images[1], (size, size))
+        self.image = self.images[0]
         self.rect = self.image.get_rect()
         self.rect.center = loc
         self.new_loc = loc
@@ -252,13 +288,13 @@ class Piece(DirtySprite):
         return self.rect.collidepoint(view_loc)
 
     def set_new_loc(self, loc):
-        self.new_loc = Conf.loc_to_view(loc[0], loc[1])
+        self.new_loc = (loc[0], loc[1])
 
     def update(self):
         if self.selected:
-            self.image.fill(Conf.COL_BLUE)
+            self.image = self.images[1]
         else:
-            self.image.fill(Conf.COLOURS[self.player])
+            self.image = self.images[0]
         if not self.rect.center == self.new_loc:
             x, y = self.rect.center
             new_x, new_y = self.new_loc
@@ -282,10 +318,13 @@ class Piece(DirtySprite):
 
 
 class Field(DirtySprite):
-    def __init__(self, field_type, loc):
+    def __init__(self, loc, size):
         DirtySprite.__init__(self)
-        self.image = pygame.Surface([Conf.PIECE_SIZE, Conf.PIECE_SIZE])
-        self.image.fill(Conf.COLOURS[field_type])
+        self.images = [Utils.load_image('field'),
+                       Utils.load_image('field' + '_h')]
+        self.images[0] = pygame.transform.scale(self.images[0], (size, size))
+        self.images[1] = pygame.transform.scale(self.images[1], (size, size))
+        self.image = self.images[0]
         self.rect = self.image.get_rect()
         self.rect.center = loc
         self.highlighted = 0
@@ -296,9 +335,9 @@ class Field(DirtySprite):
 
     def update(self):
         if self.highlighted:
-            self.image.fill(Conf.COL_BLUE)
+            self.image = self.images[0]
         else:
-            self.image.fill(Conf.COL_WHITE)
+            self.image = self.images[1]
 
 
 class Button(DirtySprite):
@@ -329,6 +368,14 @@ class BackGround(DirtySprite):
         self.rect.topleft = 0, 0
         self.dirty = 2
 
+
+class BoardSprite(DirtySprite):
+    def __init__(self):
+        DirtySprite.__init__(self)
+        self.image = Utils.load_image("board")
+        self.rect = self.image.get_rect()
+        self.rect.topleft = Conf.BOARD_LOC
+        self.dirty = 2
 
 if __name__ == "__main__":
     raise Exception("Unexpected")

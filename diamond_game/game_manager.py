@@ -71,9 +71,10 @@ class SwitchScreenEvent(Event):
 
 
 class BoardCreatedEvent(Event):
-    def __init__(self, val):
-        Event.__init__(self, "Board Create Event: " + str(val))
+    def __init__(self, val, dimention):
+        Event.__init__(self, "Board Create Event: " + str(val) + " " + str(dimention))
         self.value = val
+        self.dimention = dimention
 
 
 class PiecesCreatedEvent(Event):

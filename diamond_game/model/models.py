@@ -89,7 +89,7 @@ class GameModel(MVCObject):
         self.current_player = Conf.EMPTY
         self.size_player_triangle_base = Conf.DEFAULT_SIZE_PLAYER_BASE
         self.board = Board(self.size_player_triangle_base)
-        self.number_of_players = 2
+        self.number_of_players = Conf.NUM_PLAYERS
         self.ai_players = []
         self.set_ai_at_random()
         self.current_player = Conf.P1
@@ -113,7 +113,7 @@ class GameModel(MVCObject):
             # initiate the GAME
             if event.module == Conf.VIEW and event.sub_module == Conf.GAME:
                 self.board = Board(self.size_player_triangle_base)
-                self.post(BoardCreatedEvent(self.get_board_grid()), Conf.VIEW)
+                self.post(BoardCreatedEvent(self.get_board_grid(), self.get_grid_dimensions()), Conf.VIEW)
                 self.board.init_board(Conf.NUM_PLAYERS)
                 self.post(PiecesCreatedEvent(self.get_pieces()), Conf.VIEW)
                 # TODO: resize event
@@ -268,9 +268,6 @@ class GameModel(MVCObject):
                                 self.available_locations.append(new_loc)
                                 self.add_jump_moves(new_loc)
 
-    def is_reachable(self, loc_start, loc_end):
-        return 1.
-
     def set_ai_at_random(self):
         pass
         # ai_players = [0, 1]
@@ -290,20 +287,6 @@ class GameModel(MVCObject):
         """
         piece = self.board.get_field(loc)
         return piece.value == self.current_player
-
-    def is_reachable_field(self, loc):
-        return 1
-
-    def not_reachable_field(self, loc):
-        return 0
-
-    def valid_move(self):
-        if self.not_move_own():
-            return False
-        if self.not_free_field():
-            return False
-        if self.not_reachable_field():
-            return False
 
     def make_move(self, start_loc, end_loc):
         """Change actual model values for pieces stored.
@@ -331,6 +314,7 @@ class GameModel(MVCObject):
         self.deselect_piece(self.piece_selected_loc)
         # Order view to update
         self.post(PieceMoveEvent(uid, loc), Conf.VIEW)
+        # TODO: CHECK WIN?
         # Update current player
         self.next_player()
 
@@ -462,7 +446,7 @@ class Board(object):
                 self.board.append(list(self.board[last_ind]))
 
     # initiates created board with player pieces
-    def init_board(self, num_players=2):
+    def init_board(self, num_players=6):
         self.make_board()
         players = [Conf.P1, Conf.P3, Conf.P6, Conf.P5, Conf.P4, Conf.P2]
         for index in range(len(players)):
@@ -477,7 +461,7 @@ class Board(object):
                         row[x] = Piece(players[0])
             elif y/self.SIZE_PLAYER_BASE == 1:
                 for x in range(self.SIZE_BOARD_X_GRID):
-                    if row[x] == 0:
+                    if row[x].value == 0:
                         if x < i:
                             row[x] = Piece(players[1])
                         elif x + i >= self.SIZE_BOARD_X_GRID:
@@ -496,6 +480,8 @@ class Board(object):
                 for x in range(self.SIZE_BOARD_X_GRID):
                     if row[x].value == 0:
                         row[x] = Piece(players[5])
+        if Conf.DEBUG:
+            self.print_board()
 
     # for debug purposes
     def print_board(self):

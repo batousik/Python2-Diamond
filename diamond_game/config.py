@@ -72,37 +72,57 @@ class Conf(object):
 
     COLOURS = [COL_WHITE, COL_RED, COL_GREEN, COL_BLUE, COL_DARK_RED, COL_DARK_BLUE, COL_DARK_GREEN, COL_BLACK]
 
-    # Game settings
-    DEFAULT_SIZE_PLAYER_BASE = 4
-
     # Views
     SCREEN_SIZE = 800, 600
 
     # Game View
-    PIECE_RAD = 10
+    PIECE_RAD = 5
     PIECE_SIZE = PIECE_RAD * 2
-    Y_SEPARATION = int(math.sin(math.pi/3) * PIECE_RAD)
-    BOARD_X_OFFSET = 0
-    BOARD_Y_OFFSET = 0
+    X_SEPARATION = PIECE_SIZE
+    Y_SEPARATION = int(math.sin(math.pi/3) * X_SEPARATION)
+    BOARD_X_OFFSET = 30
+    BOARD_Y_OFFSET = 30
+    BOARD_CENTER = 300, 300
     PIECE_SLOW = 1
     PIECE_FAST = 10
+    BOARD_LOC = BOARD_X_OFFSET, BOARD_Y_OFFSET
+    BOARD_INNER_RAD = 230
+    BOARD_INNER_OFFSET_X = 46
+    BOARD_INNER_OFFSET_Y = 49
+    BOARD_REAL_CENTER = BOARD_X_OFFSET+BOARD_INNER_OFFSET_X+BOARD_INNER_RAD, BOARD_Y_OFFSET+BOARD_INNER_OFFSET_Y+BOARD_INNER_RAD
+    BOARD_RADIUS = 230
+    BOARD_X_MARGIN = 27
+    BOARD_Y_MARGIN = 40
+    TOP_LEFT_POINT = 300 - 230 * math.cos(math.pi/3), 300 - 230 * math.sin(math.pi/3),
+    PIECES_WIDTH = 2 * 230 * math.cos(math.pi/3)
+    AMOUNT_X = 1
+    AMOUNT_Y = 1
 
     # Menu View
     B1_LOC = SCREEN_SIZE[0]/2, SCREEN_SIZE[1]/2 - 80
     B2_LOC = SCREEN_SIZE[0]/2, SCREEN_SIZE[1]/2
     B3_LOC = SCREEN_SIZE[0]/2, SCREEN_SIZE[1]/2 + 80
 
-    @staticmethod
-    def loc_to_view(x, y):
-        return x * Conf.PIECE_SIZE + Conf.PIECE_RAD, y * (Conf.PIECE_SIZE+Conf.Y_SEPARATION) + Conf.PIECE_RAD
-
-    @staticmethod
-    def loc_to_model(x, y):
-        return x / Conf.PIECE_SIZE, y / (Conf.PIECE_SIZE+Conf.Y_SEPARATION)
+    # @staticmethod
+    # def loc_to_view(x, y):
+    #     x_separation = (Conf.PIECE_WIDTH/Conf.AMOUNT_X)/4
+    #     y_separation = int(math.sin(math.pi/3) * x_separation)
+    #     Conf.PIECE_RAD = x_separation / 2
+    #     Conf.PIECE_SIZE = x_separation
+    #     new_x = Conf.BOARD_X_OFFSET + Conf.BOARD_X_MARGIN + x * Conf.PIECE_SIZE
+    #     new_y = Conf.BOARD_Y_OFFSET + Conf.BOARD_Y_MARGIN + y * (Conf.PIECE_SIZE + y_separation)
+    #     return new_x, new_y
+    #
+    # @staticmethod
+    # def loc_to_model(x, y):
+    #     new_x = x / Conf.PIECE_SIZE - (Conf.BOARD_X_OFFSET + Conf.BOARD_X_MARGIN)
+    #     new_y = y / (Conf.PIECE_SIZE+Conf.Y_SEPARATION) - (Conf.BOARD_X_OFFSET + Conf.BOARD_Y_MARGIN)
+    #     return new_x, new_y
 
     # Game options
-    NUM_PLAYERS = 2
-    NUM_AI_PLAYERS = 2
+    DEFAULT_SIZE_PLAYER_BASE = 5
+    NUM_PLAYERS = 6
+    NUM_AI_PLAYERS = 0
 
 
 if __name__ == "__main__":
